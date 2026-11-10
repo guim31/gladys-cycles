@@ -1,45 +1,60 @@
 // -----------------------------------------------------------------------------
-// Integration configuration.
-//
-// The configuration is filled in by the user in Gladys, from the `config_schema`
-// declared in `gladys-assistant-integration.json`. The SDK fetches it for you
-// (`gladys.getConfig()`) and notifies you of every change through
-// `gladys.onConfigUpdated()`.
-//
-// This module only provides defaults and normalizes the received object, so the
-// rest of the code never has to deal with `undefined`.
+// Settings. The admin `config_schema` holds what applies to everyone (how far
+// ahead the calendars are generated, the language of the scene texts); each
+// user's `account_schema` holds their cycles, CYCLE_COUNT slots of the same
+// fields. Defaults mirror the manifest (test/manifest.test.js).
 // -----------------------------------------------------------------------------
 
-// Defaults: they MUST stay consistent with the `default` values declared in the
-// `config_schema` of the manifest.
+import { buildCycle } from './patterns.js';
+
+export const LANGUAGES = ['en', 'fr', 'de', 'es'];
+export const HORIZON_MONTHS = ['3', '6', '12'];
+export const CYCLE_COUNT = 3;
+export const CYCLE_FIELDS = ['type', 'name', 'start', 'time', 'first', 'pattern', 'hours'];
+export const FIRST_OPTIONS = ['me', 'other'];
+
 export const DEFAULT_CONFIG = {
-  latitude: 48.8566, // Paris
-  longitude: 2.3522,
-  unit: 'celsius', // 'celsius' | 'fahrenheit'
-  // Seconds between two reads of the polled sensors. Gladys polls at most once
-  // a minute: slower intervals are applied by skipping polls (see
-  // createPoller in src/devices/index.js).
-  poll_frequency: 300,
-  // Reserved key (NOT in config_schema): because the manifest declares both
-  // 'local' and 'cloud' in its `transports` field, Gladys shows a standard
-  // "Prefer the local connection" toggle and sends the user's choice here.
-  // Read-only for the integration; defaults to true.
-  GLADYS_PREFER_LOCAL: true,
+  horizon_months: '6',
+  language: 'fr',
 };
 
-/**
- * Merge the user config with the defaults.
- * @param {Record<string, unknown>} raw config returned by the SDK
- */
+/** The admin settings, with defaults for anything missing or unknown. */
 export function normalizeConfig(raw = {}) {
-  return {
-    ...DEFAULT_CONFIG,
-    ...raw,
-    // Force the types: config may arrive as strings from a form.
-    latitude: Number(raw.latitude ?? DEFAULT_CONFIG.latitude),
-    longitude: Number(raw.longitude ?? DEFAULT_CONFIG.longitude),
-    poll_frequency: Number(raw.poll_frequency ?? DEFAULT_CONFIG.poll_frequency),
-    // The preference is a boolean; anything but an explicit false means true.
-    GLADYS_PREFER_LOCAL: raw.GLADYS_PREFER_LOCAL !== false,
-  };
+  const config = { ...DEFAULT_CONFIG };
+  if (HORIZON_MONTHS.includes(String(raw?.horizon_months))) {
+    config.horizon_months = String(raw.horizon_months);
+  }
+  if (LANGUAGES.includes(raw?.language)) {
+    config.language = raw.language;
+  }
+  return config;
+}
+
+/** The account key of a field of a slot: `cycle_2_start`. */
+export const accountKey = (slot, field) => `cycle_${slot}_${field}`;
+
+/**
+ * The cycles of one user's account values (`getCalendarAccounts()[].config`),
+ * unused slots left out.
+ */
+export function parseAccount(values = {}) {
+  const cycles = [];
+  for (let slot = 1; slot <= CYCLE_COUNT; slot += 1) {
+    const fields = Object.fromEntries(
+      CYCLE_FIELDS.map((field) => [field, values?.[accountKey(slot, field)]]),
+    );
+    const cycle = buildCycle(slot, fields);
+    if (cycle) {
+      cycles.push(cycle);
+    }
+  }
+  return cycles;
+}
+
+/** A supported language, else the fallback. */
+export function languageOf(value, fallback = DEFAULT_CONFIG.language) {
+  const short = String(value ?? '')
+    .slice(0, 2)
+    .toLowerCase();
+  return LANGUAGES.includes(short) ? short : fallback;
 }
