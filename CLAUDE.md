@@ -9,15 +9,18 @@ A Gladys Assistant **external integration**: a Node.js service (Node 22+, ESM,
 no build step) that runs in its own sandboxed Docker container and talks to
 Gladys through
 [`@gladysassistant/integration-sdk`](https://github.com/GladysAssistant/integration-sdk-js),
-its only runtime dependency. It started from the official JavaScript template.
+its only runtime dependency. It is a `calendar`-type integration (Gladys
+5.2.0+): it generates shared custody and shift work calendars from a cycle and
+pushes them into the core calendar store, per user. No network, no `/data`.
+It started from the official JavaScript template.
 
 ## Commands
 
 ```bash
 npm install
 npm test                                  # node --test, the built-in runner
-node --test test/devices.test.js          # one file
-node --test --test-name-pattern "plug"    # tests whose name matches
+node --test test/patterns.test.js         # one file
+node --test --test-name-pattern "2-2-3"   # tests whose name matches
 npm run lint                              # ESLint
 npm run format:check                      # Prettier, as the CI runs it
 npm run format                            # Prettier, fix in place
@@ -31,16 +34,19 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
-src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
-gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+index.js                          SDK wiring only: src/app.js registers the handlers before connect()
+src/app.js                        every SDK handler, the daily slide, the 30 s transition watcher
+src/syncer.js                     per user: calendars, window of events, deletions, write limiter
+src/patterns.js                   the models: account fields -> cycle -> periods (pure)
+src/config.js                     DEFAULT_CONFIG (mirrors the manifest), account slots and fields
+src/scenes.js                     scene triggers (TransitionWatcher), scene action "cycle_status"
+src/widgets.js                    dashboard widget "cycles"
+src/i18n.js                       every text of the code, en/fr/de/es
+src/time.js                       local-date arithmetic in TZ, date and time parsing
+gladys-assistant-integration.json manifest: config_schema, account_schema, scenes, widget
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (same sections)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+test/helpers/world.js             fake Gladys + settable clock, TZ=Europe/Paris
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +76,9 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in English, French, German and Spanish: widget
+  texts, scene texts, calendar names and descriptions, manifest texts, and
+  `docs/{en,fr,de,es}.md` with the same sections. `test/i18n.test.js` checks it.
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -251,3 +258,30 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## Pièges et choix de cette intégration (Cycles)
+
+- Type `calendar` : contrat dans `capabilities/calendar-type.md` du cœur et « Calendar providers » du
+  README du SDK. Pas d'appareil possible (pas d'écran Appareils) : les « capteurs » demandés (enfants
+  présents, poste du jour, prochain changement) passent par l'action de scène `cycle_status`, les
+  déclencheurs et le widget. Les scènes intégrées « un événement arrive / est en cours » du cœur
+  marchent aussi, sur calendrier **partagé** seulement : widget, déclencheurs et action suivent la même
+  règle.
+- **Une seule requête par calendrier et par synchronisation**, avec `window` : la requête remplace
+  le contenu de la fenêtre (deux requêtes sur la même fenêtre s'effacent). Un an de postes quotidiens
+  fait ~375 événements, sous les 500 d'une requête ; au-delà, la liste et la fenêtre sont coupées.
+- Les périodes se calculent en **jours locaux** (`TZ` du superviseur) puis `new Date(y, m, d, h, mi)` :
+  l'heure de passage reste 18:00 aux changements d'heure (un week-end de 71 h ou 73 h). Les périodes
+  sont calculées avec 62 jours de marge de part et d'autre de la fenêtre, pour qu'une semaine en cours
+  garde ses vrais début et fin (sinon son id, qui contient la date de début, changerait).
+- Ids : calendrier `<user>:cycle-<n>`, événement `<user>:cycle-<n>:<date de début>:<code>`. Changer de
+  modèle dans un emplacement change les ids : l'élagage de la fenêtre retire les anciens.
+- Déclencheurs : un minuteur de 30 s compare la période en cours à la précédente, **par valeur** (chaque
+  synchronisation reconstruit les objets). Le premier regard (démarrage, calendrier qui devient partagé)
+  et le regard qui suit une modification du compte (`reset`) n'émettent rien.
+- Une langue par utilisateur (`getCalendarAccounts()[].user.language`) pour les noms d'événements et
+  la description du calendrier ; le réglage `language` ne sert qu'aux textes des scènes.
+- Un champ illisible ne crée pas d'erreur silencieuse : le calendrier est publié vide, sa description
+  dit quel champ corriger.
+- Vacances scolaires partagées par moitié : non faites (règles trop variables d'un jugement à l'autre,
+  et il faudrait le réseau) ; dit dans la doc.

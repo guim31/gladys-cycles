@@ -1,177 +1,1654 @@
 {
   "manifest_version": 1,
-  "type": "device",
-  "name": "Demo Devices Template",
+  "type": "calendar",
+  "name": "Cycles",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Shared custody and shift work calendars, generated in Gladys: who has the kids, today's shift.",
+    "fr": "Garde alternée et travail posté en calendriers Gladys : qui a les enfants, poste du jour.",
+    "de": "Wechselmodell und Schichtarbeit als Gladys-Kalender: wer die Kinder hat, heutige Schicht.",
+    "es": "Custodia compartida y turnos como calendarios de Gladys: quién tiene a los niños, turno del día."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
-  "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "docker_image": "ghcr.io/guim31/gladys-cycles:1.0.0",
+  "gladys_version": ">=5.2.0",
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-cycles/main/cover.png",
+  "categories": ["services"],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
-      "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+      "label": {
+        "en": "How it works",
+        "fr": "Fonctionnement",
+        "de": "So funktioniert es",
+        "es": "Funcionamiento"
       },
-      "links": [
+      "description": {
+        "en": "Each user sets up their own cycles in \"My calendars\" below: nothing is downloaded, every event is computed here. These settings apply to everyone.",
+        "fr": "Chaque utilisateur règle ses propres cycles dans « Mes calendriers » ci-dessous : rien n'est téléchargé, chaque événement est calculé ici. Ces réglages valent pour tous.",
+        "de": "Jeder Benutzer richtet seine eigenen Zyklen unten unter „Meine Kalender“ ein: Nichts wird heruntergeladen, jeder Termin wird hier berechnet. Diese Einstellungen gelten für alle.",
+        "es": "Cada usuario configura sus propios ciclos en «Mis calendarios» abajo: no se descarga nada, cada evento se calcula aquí. Estos ajustes valen para todos."
+      }
+    },
+    {
+      "key": "horizon_months",
+      "type": "select",
+      "label": {
+        "en": "Generate events up to",
+        "fr": "Générer les événements jusqu'à",
+        "de": "Termine erzeugen bis",
+        "es": "Generar los eventos hasta"
+      },
+      "description": {
+        "en": "The calendars slide every night: the past week stays, this horizon is kept ahead.",
+        "fr": "Les calendriers glissent chaque nuit : la semaine passée reste, cet horizon est gardé devant.",
+        "de": "Die Kalender rücken jede Nacht weiter: Die vergangene Woche bleibt, dieser Horizont liegt immer voraus.",
+        "es": "Los calendarios avanzan cada noche: la semana pasada se mantiene, este horizonte se conserva por delante."
+      },
+      "default": "6",
+      "options": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "value": "3",
+          "label": {
+            "en": "3 months ahead",
+            "fr": "3 mois à l'avance",
+            "de": "3 Monate im Voraus",
+            "es": "3 meses por delante"
+          }
+        },
+        {
+          "value": "6",
+          "label": {
+            "en": "6 months ahead",
+            "fr": "6 mois à l'avance",
+            "de": "6 Monate im Voraus",
+            "es": "6 meses por delante"
+          }
+        },
+        {
+          "value": "12",
+          "label": {
+            "en": "12 months ahead",
+            "fr": "12 mois à l'avance",
+            "de": "12 Monate im Voraus",
+            "es": "12 meses por delante"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
-    },
-    {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
+      "key": "language",
       "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
-      "required": false,
-      "default": "celsius",
-      "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
-      ]
-    },
-    {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
-      "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+      "label": {
+        "en": "Language of the scene texts",
+        "fr": "Langue des textes des scènes",
+        "de": "Sprache der Szenentexte",
+        "es": "Idioma de los textos de las escenas"
       },
-      "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "description": {
+        "en": "Labels and dates handed to scenes. Calendars follow the language of their owner.",
+        "fr": "Libellés et dates transmis aux scènes. Les calendriers suivent la langue de leur propriétaire.",
+        "de": "An Szenen übergebene Bezeichnungen und Daten. Kalender folgen der Sprache ihres Besitzers.",
+        "es": "Textos y fechas que se pasan a las escenas. Los calendarios siguen el idioma de su propietario."
+      },
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
-  "actions": [
+  "account_schema": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
+      "key": "intro",
+      "type": "section",
+      "label": {
+        "en": "Your cycles",
+        "fr": "Vos cycles",
+        "de": "Deine Zyklen",
+        "es": "Sus ciclos"
+      },
+      "description": {
+        "en": "Up to three cycles, each one becomes a calendar of yours, generated months ahead: shared custody (who has the children, from one handover to the next) or shift work (mornings, nights, on-call weeks). Pick a model and the date its first day fell on. Share a calendar below to see it on the dashboard and use it in scenes.",
+        "fr": "Jusqu'à trois cycles, chacun devient un de vos calendriers, généré des mois à l'avance : garde alternée (qui a les enfants, d'un passage au suivant) ou travail posté (matins, nuits, semaines d'astreinte). Choisissez un modèle et la date de son premier jour. Partagez un calendrier ci-dessous pour le voir sur le tableau de bord et l'utiliser dans les scènes.",
+        "de": "Bis zu drei Zyklen, jeder wird zu einem Kalender von dir, Monate im Voraus erzeugt: Wechselmodell (wer die Kinder hat, von einer Übergabe zur nächsten) oder Schichtarbeit (Früh-, Nachtschichten, Bereitschaftswochen). Wähle ein Modell und das Datum seines ersten Tages. Teile unten einen Kalender, um ihn auf dem Dashboard zu sehen und in Szenen zu nutzen.",
+        "es": "Hasta tres ciclos, cada uno se convierte en un calendario suyo, generado con meses de antelación: custodia compartida (quién tiene a los niños, de una entrega a la siguiente) o trabajo por turnos (mañanas, noches, semanas de guardia). Elija un modelo y la fecha de su primer día. Comparta un calendario abajo para verlo en el panel y usarlo en escenas."
+      }
     },
     {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
+      "key": "cycle_1_section",
+      "type": "section",
+      "label": {
+        "en": "Cycle 1",
+        "fr": "Cycle 1",
+        "de": "Zyklus 1",
+        "es": "Ciclo 1"
+      }
+    },
+    {
+      "key": "cycle_1_type",
+      "type": "select",
+      "label": {
+        "en": "Cycle 1: model",
+        "fr": "Cycle 1 : modèle",
+        "de": "Zyklus 1: Modell",
+        "es": "Ciclo 1: modelo"
+      },
+      "default": "none",
+      "options": [
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "value": "none",
+          "label": {
+            "en": "Not used",
+            "fr": "Non utilisé",
+            "de": "Nicht genutzt",
+            "es": "Sin usar"
+          }
+        },
+        {
+          "value": "custody_1_1",
+          "label": {
+            "en": "Custody: one week in two",
+            "fr": "Garde : une semaine sur deux",
+            "de": "Wechselmodell: jede zweite Woche",
+            "es": "Custodia: una semana de cada dos"
+          }
+        },
+        {
+          "value": "custody_2_2_3",
+          "label": {
+            "en": "Custody: 2-2-3",
+            "fr": "Garde : 2-2-3",
+            "de": "Wechselmodell: 2-2-3",
+            "es": "Custodia: 2-2-3"
+          }
+        },
+        {
+          "value": "custody_2_2_5_5",
+          "label": {
+            "en": "Custody: 2-2-5-5",
+            "fr": "Garde : 2-2-5-5",
+            "de": "Wechselmodell: 2-2-5-5",
+            "es": "Custodia: 2-2-5-5"
+          }
+        },
+        {
+          "value": "custody_3_4_4_3",
+          "label": {
+            "en": "Custody: 3-4-4-3",
+            "fr": "Garde : 3-4-4-3",
+            "de": "Wechselmodell: 3-4-4-3",
+            "es": "Custodia: 3-4-4-3"
+          }
+        },
+        {
+          "value": "custody_weekends_1_3_5",
+          "label": {
+            "en": "Custody: 1st, 3rd and 5th weekends",
+            "fr": "Garde : 1er, 3e et 5e week-ends",
+            "de": "Umgang: 1., 3. und 5. Wochenende",
+            "es": "Custodia: 1.º, 3.º y 5.º fin de semana"
+          }
+        },
+        {
+          "value": "custody_weekends_2_4",
+          "label": {
+            "en": "Custody: 2nd and 4th weekends",
+            "fr": "Garde : 2e et 4e week-ends",
+            "de": "Umgang: 2. und 4. Wochenende",
+            "es": "Custodia: 2.º y 4.º fin de semana"
+          }
+        },
+        {
+          "value": "custody_custom",
+          "label": {
+            "en": "Custody: custom",
+            "fr": "Garde : personnalisée",
+            "de": "Wechselmodell: eigene Folge",
+            "es": "Custodia: personalizada"
+          }
+        },
+        {
+          "value": "shift_2x8",
+          "label": {
+            "en": "Shifts: 2x8 (mornings / afternoons)",
+            "fr": "Postes : 2x8 (matins / après-midi)",
+            "de": "Schichten: 2-Schicht (Früh / Spät)",
+            "es": "Turnos: 2x8 (mañanas / tardes)"
+          }
+        },
+        {
+          "value": "shift_3x8",
+          "label": {
+            "en": "Shifts: 3x8 by week",
+            "fr": "Postes : 3x8 par semaine",
+            "de": "Schichten: 3-Schicht wochenweise",
+            "es": "Turnos: 3x8 por semanas"
+          }
+        },
+        {
+          "value": "shift_5x8",
+          "label": {
+            "en": "Shifts: 5x8 continuous",
+            "fr": "Postes : 5x8 en continu",
+            "de": "Schichten: 5-Schicht vollkontinuierlich",
+            "es": "Turnos: 5x8 continuo"
+          }
+        },
+        {
+          "value": "shift_12h",
+          "label": {
+            "en": "Shifts: 12 h day / night",
+            "fr": "Postes : 12 h jour / nuit",
+            "de": "Schichten: 12 h Tag / Nacht",
+            "es": "Turnos: 12 h día / noche"
+          }
+        },
+        {
+          "value": "on_call_2",
+          "label": {
+            "en": "On call: one week in two",
+            "fr": "Astreinte : une semaine sur deux",
+            "de": "Bereitschaft: jede zweite Woche",
+            "es": "Guardia: una semana de cada dos"
+          }
+        },
+        {
+          "value": "on_call_3",
+          "label": {
+            "en": "On call: one week in three",
+            "fr": "Astreinte : une semaine sur trois",
+            "de": "Bereitschaft: jede dritte Woche",
+            "es": "Guardia: una semana de cada tres"
+          }
+        },
+        {
+          "value": "on_call_4",
+          "label": {
+            "en": "On call: one week in four",
+            "fr": "Astreinte : une semaine sur quatre",
+            "de": "Bereitschaft: jede vierte Woche",
+            "es": "Guardia: una semana de cada cuatro"
+          }
+        },
+        {
+          "value": "shift_custom",
+          "label": {
+            "en": "Shifts: custom",
+            "fr": "Postes : personnalisés",
+            "de": "Schichten: eigene Folge",
+            "es": "Turnos: personalizados"
+          }
         }
       ]
+    },
+    {
+      "key": "cycle_1_name",
+      "type": "string",
+      "label": {
+        "en": "Cycle 1: calendar name",
+        "fr": "Cycle 1 : nom du calendrier",
+        "de": "Zyklus 1: Kalendername",
+        "es": "Ciclo 1: nombre del calendario"
+      },
+      "description": {
+        "en": "Optional. Scenes and the widget refer to the cycle by this name.",
+        "fr": "Facultatif. Les scènes et le widget désignent le cycle par ce nom.",
+        "de": "Optional. Szenen und Widget sprechen den Zyklus mit diesem Namen an.",
+        "es": "Opcional. Las escenas y el widget se refieren al ciclo con este nombre."
+      },
+      "placeholder": {
+        "en": "e.g. Shared custody",
+        "fr": "ex. Garde alternée",
+        "de": "z. B. Wechselmodell",
+        "es": "p. ej. Custodia compartida"
+      }
+    },
+    {
+      "key": "cycle_1_start",
+      "type": "string",
+      "label": {
+        "en": "Cycle 1: start date",
+        "fr": "Cycle 1 : date de départ",
+        "de": "Zyklus 1: Startdatum",
+        "es": "Ciclo 1: fecha de inicio"
+      },
+      "description": {
+        "en": "The first day of the pattern, in the past or not. Optional for the weekend models.",
+        "fr": "Le premier jour du modèle, passé ou non. Facultative pour les modèles de week-ends.",
+        "de": "Der erste Tag des Musters, gern in der Vergangenheit. Optional bei den Wochenend-Modellen.",
+        "es": "El primer día del modelo, pasado o no. Opcional en los modelos de fines de semana."
+      },
+      "placeholder": {
+        "en": "e.g. 2026-09-04",
+        "fr": "ex. 04/09/2026",
+        "de": "z. B. 04.09.2026",
+        "es": "p. ej. 04/09/2026"
+      }
+    },
+    {
+      "key": "cycle_1_time",
+      "type": "string",
+      "label": {
+        "en": "Cycle 1: handover time",
+        "fr": "Cycle 1 : heure de passage",
+        "de": "Zyklus 1: Übergabezeit",
+        "es": "Ciclo 1: hora de entrega"
+      },
+      "description": {
+        "en": "When the children change homes, or the on-call week begins. Empty: 18:00 for custody, 08:00 for on call.",
+        "fr": "Quand les enfants changent de maison, ou que l'astreinte commence. Vide : 18:00 pour la garde, 08:00 pour l'astreinte.",
+        "de": "Wann die Kinder wechseln oder die Bereitschaft beginnt. Leer: 18:00 beim Wechselmodell, 08:00 bei Bereitschaft.",
+        "es": "Cuándo cambian de casa los niños o empieza la guardia. Vacío: 18:00 en custodia, 08:00 en guardia."
+      },
+      "placeholder": {
+        "en": "e.g. 18:00",
+        "fr": "ex. 18:00",
+        "de": "z. B. 18:00",
+        "es": "p. ej. 18:00"
+      }
+    },
+    {
+      "key": "cycle_1_first",
+      "type": "select",
+      "label": {
+        "en": "Cycle 1: on the start date",
+        "fr": "Cycle 1 : à la date de départ",
+        "de": "Zyklus 1: am Startdatum",
+        "es": "Ciclo 1: en la fecha de inicio"
+      },
+      "description": {
+        "en": "Custody only: who has the children at the start (or on the weekends of the model).",
+        "fr": "Garde seulement : qui a les enfants au départ (ou les week-ends du modèle).",
+        "de": "Nur Wechselmodell: wer die Kinder am Anfang hat (oder an den Wochenenden des Modells).",
+        "es": "Solo custodia: quién tiene a los niños al inicio (o los fines de semana del modelo)."
+      },
+      "default": "me",
+      "options": [
+        {
+          "value": "me",
+          "label": {
+            "en": "Children with me",
+            "fr": "Enfants chez moi",
+            "de": "Kinder bei mir",
+            "es": "Niños conmigo"
+          }
+        },
+        {
+          "value": "other",
+          "label": {
+            "en": "With the other parent",
+            "fr": "Chez l'autre parent",
+            "de": "Beim anderen Elternteil",
+            "es": "Con el otro progenitor"
+          }
+        }
+      ]
+    },
+    {
+      "key": "cycle_1_pattern",
+      "type": "string",
+      "label": {
+        "en": "Cycle 1: custom pattern",
+        "fr": "Cycle 1 : suite personnalisée",
+        "de": "Zyklus 1: eigene Folge",
+        "es": "Ciclo 1: secuencia personalizada"
+      },
+      "description": {
+        "en": "Custom models only. Custody: days per block, parents alternating (2/2/5/5). Shifts: days and letters M, A, N, D, O, R (2M 2A 2N 4R).",
+        "fr": "Modèles personnalisés seulement. Garde : jours par bloc, parents en alternance (2/2/5/5). Postes : jours et lettres M, A, N, J, O, R (2M 2A 2N 4R).",
+        "de": "Nur eigene Modelle. Wechselmodell: Tage pro Block, Eltern abwechselnd (2/2/5/5). Schichten: Tage und Buchstaben M, A, N, D, O, R (2M 2A 2N 4R).",
+        "es": "Solo modelos personalizados. Custodia: días por bloque, alternando progenitores (2/2/5/5). Turnos: días y letras M, A, N, D, O, R (2M 2A 2N 4R)."
+      },
+      "placeholder": {
+        "en": "e.g. 2M 2A 2N 4R",
+        "fr": "ex. 2M 2A 2N 4R",
+        "de": "z. B. 2M 2A 2N 4R",
+        "es": "p. ej. 2M 2A 2N 4R"
+      }
+    },
+    {
+      "key": "cycle_1_hours",
+      "type": "string",
+      "label": {
+        "en": "Cycle 1: shift hours",
+        "fr": "Cycle 1 : horaires des postes",
+        "de": "Zyklus 1: Schichtzeiten",
+        "es": "Ciclo 1: horarios de los turnos"
+      },
+      "description": {
+        "en": "Optional, shifts only: what differs from M=06:00-14:00; A=14:00-22:00; N=22:00-06:00; D=07:00-19:00.",
+        "fr": "Facultatif, postes seulement : ce qui diffère de M=06:00-14:00; A=14:00-22:00; N=22:00-06:00; J=07:00-19:00.",
+        "de": "Optional, nur Schichten: was abweicht von M=06:00-14:00; A=14:00-22:00; N=22:00-06:00; D=07:00-19:00.",
+        "es": "Opcional, solo turnos: lo que difiere de M=06:00-14:00; A=14:00-22:00; N=22:00-06:00; D=07:00-19:00."
+      },
+      "placeholder": {
+        "en": "e.g. M=05:00-13:00",
+        "fr": "ex. M=05:00-13:00",
+        "de": "z. B. M=05:00-13:00",
+        "es": "p. ej. M=05:00-13:00"
+      }
+    },
+    {
+      "key": "cycle_2_section",
+      "type": "section",
+      "label": {
+        "en": "Cycle 2",
+        "fr": "Cycle 2",
+        "de": "Zyklus 2",
+        "es": "Ciclo 2"
+      }
+    },
+    {
+      "key": "cycle_2_type",
+      "type": "select",
+      "label": {
+        "en": "Cycle 2: model",
+        "fr": "Cycle 2 : modèle",
+        "de": "Zyklus 2: Modell",
+        "es": "Ciclo 2: modelo"
+      },
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": {
+            "en": "Not used",
+            "fr": "Non utilisé",
+            "de": "Nicht genutzt",
+            "es": "Sin usar"
+          }
+        },
+        {
+          "value": "custody_1_1",
+          "label": {
+            "en": "Custody: one week in two",
+            "fr": "Garde : une semaine sur deux",
+            "de": "Wechselmodell: jede zweite Woche",
+            "es": "Custodia: una semana de cada dos"
+          }
+        },
+        {
+          "value": "custody_2_2_3",
+          "label": {
+            "en": "Custody: 2-2-3",
+            "fr": "Garde : 2-2-3",
+            "de": "Wechselmodell: 2-2-3",
+            "es": "Custodia: 2-2-3"
+          }
+        },
+        {
+          "value": "custody_2_2_5_5",
+          "label": {
+            "en": "Custody: 2-2-5-5",
+            "fr": "Garde : 2-2-5-5",
+            "de": "Wechselmodell: 2-2-5-5",
+            "es": "Custodia: 2-2-5-5"
+          }
+        },
+        {
+          "value": "custody_3_4_4_3",
+          "label": {
+            "en": "Custody: 3-4-4-3",
+            "fr": "Garde : 3-4-4-3",
+            "de": "Wechselmodell: 3-4-4-3",
+            "es": "Custodia: 3-4-4-3"
+          }
+        },
+        {
+          "value": "custody_weekends_1_3_5",
+          "label": {
+            "en": "Custody: 1st, 3rd and 5th weekends",
+            "fr": "Garde : 1er, 3e et 5e week-ends",
+            "de": "Umgang: 1., 3. und 5. Wochenende",
+            "es": "Custodia: 1.º, 3.º y 5.º fin de semana"
+          }
+        },
+        {
+          "value": "custody_weekends_2_4",
+          "label": {
+            "en": "Custody: 2nd and 4th weekends",
+            "fr": "Garde : 2e et 4e week-ends",
+            "de": "Umgang: 2. und 4. Wochenende",
+            "es": "Custodia: 2.º y 4.º fin de semana"
+          }
+        },
+        {
+          "value": "custody_custom",
+          "label": {
+            "en": "Custody: custom",
+            "fr": "Garde : personnalisée",
+            "de": "Wechselmodell: eigene Folge",
+            "es": "Custodia: personalizada"
+          }
+        },
+        {
+          "value": "shift_2x8",
+          "label": {
+            "en": "Shifts: 2x8 (mornings / afternoons)",
+            "fr": "Postes : 2x8 (matins / après-midi)",
+            "de": "Schichten: 2-Schicht (Früh / Spät)",
+            "es": "Turnos: 2x8 (mañanas / tardes)"
+          }
+        },
+        {
+          "value": "shift_3x8",
+          "label": {
+            "en": "Shifts: 3x8 by week",
+            "fr": "Postes : 3x8 par semaine",
+            "de": "Schichten: 3-Schicht wochenweise",
+            "es": "Turnos: 3x8 por semanas"
+          }
+        },
+        {
+          "value": "shift_5x8",
+          "label": {
+            "en": "Shifts: 5x8 continuous",
+            "fr": "Postes : 5x8 en continu",
+            "de": "Schichten: 5-Schicht vollkontinuierlich",
+            "es": "Turnos: 5x8 continuo"
+          }
+        },
+        {
+          "value": "shift_12h",
+          "label": {
+            "en": "Shifts: 12 h day / night",
+            "fr": "Postes : 12 h jour / nuit",
+            "de": "Schichten: 12 h Tag / Nacht",
+            "es": "Turnos: 12 h día / noche"
+          }
+        },
+        {
+          "value": "on_call_2",
+          "label": {
+            "en": "On call: one week in two",
+            "fr": "Astreinte : une semaine sur deux",
+            "de": "Bereitschaft: jede zweite Woche",
+            "es": "Guardia: una semana de cada dos"
+          }
+        },
+        {
+          "value": "on_call_3",
+          "label": {
+            "en": "On call: one week in three",
+            "fr": "Astreinte : une semaine sur trois",
+            "de": "Bereitschaft: jede dritte Woche",
+            "es": "Guardia: una semana de cada tres"
+          }
+        },
+        {
+          "value": "on_call_4",
+          "label": {
+            "en": "On call: one week in four",
+            "fr": "Astreinte : une semaine sur quatre",
+            "de": "Bereitschaft: jede vierte Woche",
+            "es": "Guardia: una semana de cada cuatro"
+          }
+        },
+        {
+          "value": "shift_custom",
+          "label": {
+            "en": "Shifts: custom",
+            "fr": "Postes : personnalisés",
+            "de": "Schichten: eigene Folge",
+            "es": "Turnos: personalizados"
+          }
+        }
+      ]
+    },
+    {
+      "key": "cycle_2_name",
+      "type": "string",
+      "label": {
+        "en": "Cycle 2: calendar name",
+        "fr": "Cycle 2 : nom du calendrier",
+        "de": "Zyklus 2: Kalendername",
+        "es": "Ciclo 2: nombre del calendario"
+      },
+      "description": {
+        "en": "Optional. Scenes and the widget refer to the cycle by this name.",
+        "fr": "Facultatif. Les scènes et le widget désignent le cycle par ce nom.",
+        "de": "Optional. Szenen und Widget sprechen den Zyklus mit diesem Namen an.",
+        "es": "Opcional. Las escenas y el widget se refieren al ciclo con este nombre."
+      },
+      "placeholder": {
+        "en": "e.g. Shared custody",
+        "fr": "ex. Garde alternée",
+        "de": "z. B. Wechselmodell",
+        "es": "p. ej. Custodia compartida"
+      }
+    },
+    {
+      "key": "cycle_2_start",
+      "type": "string",
+      "label": {
+        "en": "Cycle 2: start date",
+        "fr": "Cycle 2 : date de départ",
+        "de": "Zyklus 2: Startdatum",
+        "es": "Ciclo 2: fecha de inicio"
+      },
+      "description": {
+        "en": "The first day of the pattern, in the past or not. Optional for the weekend models.",
+        "fr": "Le premier jour du modèle, passé ou non. Facultative pour les modèles de week-ends.",
+        "de": "Der erste Tag des Musters, gern in der Vergangenheit. Optional bei den Wochenend-Modellen.",
+        "es": "El primer día del modelo, pasado o no. Opcional en los modelos de fines de semana."
+      },
+      "placeholder": {
+        "en": "e.g. 2026-09-04",
+        "fr": "ex. 04/09/2026",
+        "de": "z. B. 04.09.2026",
+        "es": "p. ej. 04/09/2026"
+      }
+    },
+    {
+      "key": "cycle_2_time",
+      "type": "string",
+      "label": {
+        "en": "Cycle 2: handover time",
+        "fr": "Cycle 2 : heure de passage",
+        "de": "Zyklus 2: Übergabezeit",
+        "es": "Ciclo 2: hora de entrega"
+      },
+      "description": {
+        "en": "When the children change homes, or the on-call week begins. Empty: 18:00 for custody, 08:00 for on call.",
+        "fr": "Quand les enfants changent de maison, ou que l'astreinte commence. Vide : 18:00 pour la garde, 08:00 pour l'astreinte.",
+        "de": "Wann die Kinder wechseln oder die Bereitschaft beginnt. Leer: 18:00 beim Wechselmodell, 08:00 bei Bereitschaft.",
+        "es": "Cuándo cambian de casa los niños o empieza la guardia. Vacío: 18:00 en custodia, 08:00 en guardia."
+      },
+      "placeholder": {
+        "en": "e.g. 18:00",
+        "fr": "ex. 18:00",
+        "de": "z. B. 18:00",
+        "es": "p. ej. 18:00"
+      }
+    },
+    {
+      "key": "cycle_2_first",
+      "type": "select",
+      "label": {
+        "en": "Cycle 2: on the start date",
+        "fr": "Cycle 2 : à la date de départ",
+        "de": "Zyklus 2: am Startdatum",
+        "es": "Ciclo 2: en la fecha de inicio"
+      },
+      "description": {
+        "en": "Custody only: who has the children at the start (or on the weekends of the model).",
+        "fr": "Garde seulement : qui a les enfants au départ (ou les week-ends du modèle).",
+        "de": "Nur Wechselmodell: wer die Kinder am Anfang hat (oder an den Wochenenden des Modells).",
+        "es": "Solo custodia: quién tiene a los niños al inicio (o los fines de semana del modelo)."
+      },
+      "default": "me",
+      "options": [
+        {
+          "value": "me",
+          "label": {
+            "en": "Children with me",
+            "fr": "Enfants chez moi",
+            "de": "Kinder bei mir",
+            "es": "Niños conmigo"
+          }
+        },
+        {
+          "value": "other",
+          "label": {
+            "en": "With the other parent",
+            "fr": "Chez l'autre parent",
+            "de": "Beim anderen Elternteil",
+            "es": "Con el otro progenitor"
+          }
+        }
+      ]
+    },
+    {
+      "key": "cycle_2_pattern",
+      "type": "string",
+      "label": {
+        "en": "Cycle 2: custom pattern",
+        "fr": "Cycle 2 : suite personnalisée",
+        "de": "Zyklus 2: eigene Folge",
+        "es": "Ciclo 2: secuencia personalizada"
+      },
+      "description": {
+        "en": "Custom models only. Custody: days per block, parents alternating (2/2/5/5). Shifts: days and letters M, A, N, D, O, R (2M 2A 2N 4R).",
+        "fr": "Modèles personnalisés seulement. Garde : jours par bloc, parents en alternance (2/2/5/5). Postes : jours et lettres M, A, N, J, O, R (2M 2A 2N 4R).",
+        "de": "Nur eigene Modelle. Wechselmodell: Tage pro Block, Eltern abwechselnd (2/2/5/5). Schichten: Tage und Buchstaben M, A, N, D, O, R (2M 2A 2N 4R).",
+        "es": "Solo modelos personalizados. Custodia: días por bloque, alternando progenitores (2/2/5/5). Turnos: días y letras M, A, N, D, O, R (2M 2A 2N 4R)."
+      },
+      "placeholder": {
+        "en": "e.g. 2M 2A 2N 4R",
+        "fr": "ex. 2M 2A 2N 4R",
+        "de": "z. B. 2M 2A 2N 4R",
+        "es": "p. ej. 2M 2A 2N 4R"
+      }
+    },
+    {
+      "key": "cycle_2_hours",
+      "type": "string",
+      "label": {
+        "en": "Cycle 2: shift hours",
+        "fr": "Cycle 2 : horaires des postes",
+        "de": "Zyklus 2: Schichtzeiten",
+        "es": "Ciclo 2: horarios de los turnos"
+      },
+      "description": {
+        "en": "Optional, shifts only: what differs from M=06:00-14:00; A=14:00-22:00; N=22:00-06:00; D=07:00-19:00.",
+        "fr": "Facultatif, postes seulement : ce qui diffère de M=06:00-14:00; A=14:00-22:00; N=22:00-06:00; J=07:00-19:00.",
+        "de": "Optional, nur Schichten: was abweicht von M=06:00-14:00; A=14:00-22:00; N=22:00-06:00; D=07:00-19:00.",
+        "es": "Opcional, solo turnos: lo que difiere de M=06:00-14:00; A=14:00-22:00; N=22:00-06:00; D=07:00-19:00."
+      },
+      "placeholder": {
+        "en": "e.g. M=05:00-13:00",
+        "fr": "ex. M=05:00-13:00",
+        "de": "z. B. M=05:00-13:00",
+        "es": "p. ej. M=05:00-13:00"
+      }
+    },
+    {
+      "key": "cycle_3_section",
+      "type": "section",
+      "label": {
+        "en": "Cycle 3",
+        "fr": "Cycle 3",
+        "de": "Zyklus 3",
+        "es": "Ciclo 3"
+      }
+    },
+    {
+      "key": "cycle_3_type",
+      "type": "select",
+      "label": {
+        "en": "Cycle 3: model",
+        "fr": "Cycle 3 : modèle",
+        "de": "Zyklus 3: Modell",
+        "es": "Ciclo 3: modelo"
+      },
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": {
+            "en": "Not used",
+            "fr": "Non utilisé",
+            "de": "Nicht genutzt",
+            "es": "Sin usar"
+          }
+        },
+        {
+          "value": "custody_1_1",
+          "label": {
+            "en": "Custody: one week in two",
+            "fr": "Garde : une semaine sur deux",
+            "de": "Wechselmodell: jede zweite Woche",
+            "es": "Custodia: una semana de cada dos"
+          }
+        },
+        {
+          "value": "custody_2_2_3",
+          "label": {
+            "en": "Custody: 2-2-3",
+            "fr": "Garde : 2-2-3",
+            "de": "Wechselmodell: 2-2-3",
+            "es": "Custodia: 2-2-3"
+          }
+        },
+        {
+          "value": "custody_2_2_5_5",
+          "label": {
+            "en": "Custody: 2-2-5-5",
+            "fr": "Garde : 2-2-5-5",
+            "de": "Wechselmodell: 2-2-5-5",
+            "es": "Custodia: 2-2-5-5"
+          }
+        },
+        {
+          "value": "custody_3_4_4_3",
+          "label": {
+            "en": "Custody: 3-4-4-3",
+            "fr": "Garde : 3-4-4-3",
+            "de": "Wechselmodell: 3-4-4-3",
+            "es": "Custodia: 3-4-4-3"
+          }
+        },
+        {
+          "value": "custody_weekends_1_3_5",
+          "label": {
+            "en": "Custody: 1st, 3rd and 5th weekends",
+            "fr": "Garde : 1er, 3e et 5e week-ends",
+            "de": "Umgang: 1., 3. und 5. Wochenende",
+            "es": "Custodia: 1.º, 3.º y 5.º fin de semana"
+          }
+        },
+        {
+          "value": "custody_weekends_2_4",
+          "label": {
+            "en": "Custody: 2nd and 4th weekends",
+            "fr": "Garde : 2e et 4e week-ends",
+            "de": "Umgang: 2. und 4. Wochenende",
+            "es": "Custodia: 2.º y 4.º fin de semana"
+          }
+        },
+        {
+          "value": "custody_custom",
+          "label": {
+            "en": "Custody: custom",
+            "fr": "Garde : personnalisée",
+            "de": "Wechselmodell: eigene Folge",
+            "es": "Custodia: personalizada"
+          }
+        },
+        {
+          "value": "shift_2x8",
+          "label": {
+            "en": "Shifts: 2x8 (mornings / afternoons)",
+            "fr": "Postes : 2x8 (matins / après-midi)",
+            "de": "Schichten: 2-Schicht (Früh / Spät)",
+            "es": "Turnos: 2x8 (mañanas / tardes)"
+          }
+        },
+        {
+          "value": "shift_3x8",
+          "label": {
+            "en": "Shifts: 3x8 by week",
+            "fr": "Postes : 3x8 par semaine",
+            "de": "Schichten: 3-Schicht wochenweise",
+            "es": "Turnos: 3x8 por semanas"
+          }
+        },
+        {
+          "value": "shift_5x8",
+          "label": {
+            "en": "Shifts: 5x8 continuous",
+            "fr": "Postes : 5x8 en continu",
+            "de": "Schichten: 5-Schicht vollkontinuierlich",
+            "es": "Turnos: 5x8 continuo"
+          }
+        },
+        {
+          "value": "shift_12h",
+          "label": {
+            "en": "Shifts: 12 h day / night",
+            "fr": "Postes : 12 h jour / nuit",
+            "de": "Schichten: 12 h Tag / Nacht",
+            "es": "Turnos: 12 h día / noche"
+          }
+        },
+        {
+          "value": "on_call_2",
+          "label": {
+            "en": "On call: one week in two",
+            "fr": "Astreinte : une semaine sur deux",
+            "de": "Bereitschaft: jede zweite Woche",
+            "es": "Guardia: una semana de cada dos"
+          }
+        },
+        {
+          "value": "on_call_3",
+          "label": {
+            "en": "On call: one week in three",
+            "fr": "Astreinte : une semaine sur trois",
+            "de": "Bereitschaft: jede dritte Woche",
+            "es": "Guardia: una semana de cada tres"
+          }
+        },
+        {
+          "value": "on_call_4",
+          "label": {
+            "en": "On call: one week in four",
+            "fr": "Astreinte : une semaine sur quatre",
+            "de": "Bereitschaft: jede vierte Woche",
+            "es": "Guardia: una semana de cada cuatro"
+          }
+        },
+        {
+          "value": "shift_custom",
+          "label": {
+            "en": "Shifts: custom",
+            "fr": "Postes : personnalisés",
+            "de": "Schichten: eigene Folge",
+            "es": "Turnos: personalizados"
+          }
+        }
+      ]
+    },
+    {
+      "key": "cycle_3_name",
+      "type": "string",
+      "label": {
+        "en": "Cycle 3: calendar name",
+        "fr": "Cycle 3 : nom du calendrier",
+        "de": "Zyklus 3: Kalendername",
+        "es": "Ciclo 3: nombre del calendario"
+      },
+      "description": {
+        "en": "Optional. Scenes and the widget refer to the cycle by this name.",
+        "fr": "Facultatif. Les scènes et le widget désignent le cycle par ce nom.",
+        "de": "Optional. Szenen und Widget sprechen den Zyklus mit diesem Namen an.",
+        "es": "Opcional. Las escenas y el widget se refieren al ciclo con este nombre."
+      },
+      "placeholder": {
+        "en": "e.g. Shared custody",
+        "fr": "ex. Garde alternée",
+        "de": "z. B. Wechselmodell",
+        "es": "p. ej. Custodia compartida"
+      }
+    },
+    {
+      "key": "cycle_3_start",
+      "type": "string",
+      "label": {
+        "en": "Cycle 3: start date",
+        "fr": "Cycle 3 : date de départ",
+        "de": "Zyklus 3: Startdatum",
+        "es": "Ciclo 3: fecha de inicio"
+      },
+      "description": {
+        "en": "The first day of the pattern, in the past or not. Optional for the weekend models.",
+        "fr": "Le premier jour du modèle, passé ou non. Facultative pour les modèles de week-ends.",
+        "de": "Der erste Tag des Musters, gern in der Vergangenheit. Optional bei den Wochenend-Modellen.",
+        "es": "El primer día del modelo, pasado o no. Opcional en los modelos de fines de semana."
+      },
+      "placeholder": {
+        "en": "e.g. 2026-09-04",
+        "fr": "ex. 04/09/2026",
+        "de": "z. B. 04.09.2026",
+        "es": "p. ej. 04/09/2026"
+      }
+    },
+    {
+      "key": "cycle_3_time",
+      "type": "string",
+      "label": {
+        "en": "Cycle 3: handover time",
+        "fr": "Cycle 3 : heure de passage",
+        "de": "Zyklus 3: Übergabezeit",
+        "es": "Ciclo 3: hora de entrega"
+      },
+      "description": {
+        "en": "When the children change homes, or the on-call week begins. Empty: 18:00 for custody, 08:00 for on call.",
+        "fr": "Quand les enfants changent de maison, ou que l'astreinte commence. Vide : 18:00 pour la garde, 08:00 pour l'astreinte.",
+        "de": "Wann die Kinder wechseln oder die Bereitschaft beginnt. Leer: 18:00 beim Wechselmodell, 08:00 bei Bereitschaft.",
+        "es": "Cuándo cambian de casa los niños o empieza la guardia. Vacío: 18:00 en custodia, 08:00 en guardia."
+      },
+      "placeholder": {
+        "en": "e.g. 18:00",
+        "fr": "ex. 18:00",
+        "de": "z. B. 18:00",
+        "es": "p. ej. 18:00"
+      }
+    },
+    {
+      "key": "cycle_3_first",
+      "type": "select",
+      "label": {
+        "en": "Cycle 3: on the start date",
+        "fr": "Cycle 3 : à la date de départ",
+        "de": "Zyklus 3: am Startdatum",
+        "es": "Ciclo 3: en la fecha de inicio"
+      },
+      "description": {
+        "en": "Custody only: who has the children at the start (or on the weekends of the model).",
+        "fr": "Garde seulement : qui a les enfants au départ (ou les week-ends du modèle).",
+        "de": "Nur Wechselmodell: wer die Kinder am Anfang hat (oder an den Wochenenden des Modells).",
+        "es": "Solo custodia: quién tiene a los niños al inicio (o los fines de semana del modelo)."
+      },
+      "default": "me",
+      "options": [
+        {
+          "value": "me",
+          "label": {
+            "en": "Children with me",
+            "fr": "Enfants chez moi",
+            "de": "Kinder bei mir",
+            "es": "Niños conmigo"
+          }
+        },
+        {
+          "value": "other",
+          "label": {
+            "en": "With the other parent",
+            "fr": "Chez l'autre parent",
+            "de": "Beim anderen Elternteil",
+            "es": "Con el otro progenitor"
+          }
+        }
+      ]
+    },
+    {
+      "key": "cycle_3_pattern",
+      "type": "string",
+      "label": {
+        "en": "Cycle 3: custom pattern",
+        "fr": "Cycle 3 : suite personnalisée",
+        "de": "Zyklus 3: eigene Folge",
+        "es": "Ciclo 3: secuencia personalizada"
+      },
+      "description": {
+        "en": "Custom models only. Custody: days per block, parents alternating (2/2/5/5). Shifts: days and letters M, A, N, D, O, R (2M 2A 2N 4R).",
+        "fr": "Modèles personnalisés seulement. Garde : jours par bloc, parents en alternance (2/2/5/5). Postes : jours et lettres M, A, N, J, O, R (2M 2A 2N 4R).",
+        "de": "Nur eigene Modelle. Wechselmodell: Tage pro Block, Eltern abwechselnd (2/2/5/5). Schichten: Tage und Buchstaben M, A, N, D, O, R (2M 2A 2N 4R).",
+        "es": "Solo modelos personalizados. Custodia: días por bloque, alternando progenitores (2/2/5/5). Turnos: días y letras M, A, N, D, O, R (2M 2A 2N 4R)."
+      },
+      "placeholder": {
+        "en": "e.g. 2M 2A 2N 4R",
+        "fr": "ex. 2M 2A 2N 4R",
+        "de": "z. B. 2M 2A 2N 4R",
+        "es": "p. ej. 2M 2A 2N 4R"
+      }
+    },
+    {
+      "key": "cycle_3_hours",
+      "type": "string",
+      "label": {
+        "en": "Cycle 3: shift hours",
+        "fr": "Cycle 3 : horaires des postes",
+        "de": "Zyklus 3: Schichtzeiten",
+        "es": "Ciclo 3: horarios de los turnos"
+      },
+      "description": {
+        "en": "Optional, shifts only: what differs from M=06:00-14:00; A=14:00-22:00; N=22:00-06:00; D=07:00-19:00.",
+        "fr": "Facultatif, postes seulement : ce qui diffère de M=06:00-14:00; A=14:00-22:00; N=22:00-06:00; J=07:00-19:00.",
+        "de": "Optional, nur Schichten: was abweicht von M=06:00-14:00; A=14:00-22:00; N=22:00-06:00; D=07:00-19:00.",
+        "es": "Opcional, solo turnos: lo que difiere de M=06:00-14:00; A=14:00-22:00; N=22:00-06:00; D=07:00-19:00."
+      },
+      "placeholder": {
+        "en": "e.g. M=05:00-13:00",
+        "fr": "ex. M=05:00-13:00",
+        "de": "z. B. M=05:00-13:00",
+        "es": "p. ej. M=05:00-13:00"
+      }
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "custody_changed",
+      "label": {
+        "en": "Children arrive or leave",
+        "fr": "Arrivée ou départ des enfants",
+        "de": "Kinder kommen oder gehen",
+        "es": "Llegan o se van los niños"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "At the handover time of a shared custody calendar.",
+        "fr": "À l'heure de passage d'un calendrier de garde partagé.",
+        "de": "Zur Übergabezeit eines geteilten Wechselmodell-Kalenders.",
+        "es": "A la hora de entrega de un calendario de custodia compartido."
       },
       "fields": [
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "key": "calendar",
+          "type": "string",
+          "label": {
+            "en": "Cycle calendar",
+            "fr": "Calendrier du cycle",
+            "de": "Zyklus-Kalender",
+            "es": "Calendario del ciclo"
+          },
+          "description": {
+            "en": "Exact name of a shared cycle calendar. Empty: any of them.",
+            "fr": "Nom exact d'un calendrier de cycle partagé. Vide : n'importe lequel.",
+            "de": "Genauer Name eines geteilten Zyklus-Kalenders. Leer: jeder.",
+            "es": "Nombre exacto de un calendario de ciclo compartido. Vacío: cualquiera."
+          },
+          "placeholder": {
+            "en": "e.g. Shared custody",
+            "fr": "ex. Garde alternée",
+            "de": "z. B. Wechselmodell",
+            "es": "p. ej. Custodia compartida"
+          }
         },
         {
-          "key": "target",
+          "key": "change",
           "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "label": {
+            "en": "Change",
+            "fr": "Changement",
+            "de": "Änderung",
+            "es": "Cambio"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "arrival",
+              "label": {
+                "en": "Children arrive",
+                "fr": "Arrivée des enfants",
+                "de": "Kinder kommen",
+                "es": "Llegan los niños"
+              }
+            },
+            {
+              "value": "departure",
+              "label": {
+                "en": "Children leave",
+                "fr": "Départ des enfants",
+                "de": "Kinder gehen",
+                "es": "Se van los niños"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "calendar",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Calendar",
+            "fr": "Calendrier",
+            "de": "Kalender",
+            "es": "Calendario"
+          }
+        },
+        {
+          "key": "user",
+          "type": "string",
+          "label": {
+            "en": "Owner",
+            "fr": "Propriétaire",
+            "de": "Besitzer",
+            "es": "Propietario"
+          }
+        },
+        {
+          "key": "change",
+          "type": "string",
+          "label": {
+            "en": "Change (key)",
+            "fr": "Changement (clé)",
+            "de": "Änderung (Schlüssel)",
+            "es": "Cambio (clave)"
+          }
+        },
+        {
+          "key": "change_label",
+          "type": "string",
+          "label": {
+            "en": "Change",
+            "fr": "Changement",
+            "de": "Änderung",
+            "es": "Cambio"
+          }
+        },
+        {
+          "key": "present",
+          "type": "number",
+          "label": {
+            "en": "Children with me (1 yes, 0 no)",
+            "fr": "Enfants chez moi (1 oui, 0 non)",
+            "de": "Kinder bei mir (1 ja, 0 nein)",
+            "es": "Niños conmigo (1 sí, 0 no)"
+          }
+        },
+        {
+          "key": "next_change",
+          "type": "string",
+          "label": {
+            "en": "Next handover",
+            "fr": "Prochain passage",
+            "de": "Nächste Übergabe",
+            "es": "Próxima entrega"
+          }
+        }
+      ]
+    },
+    {
+      "key": "shift_changed",
+      "label": {
+        "en": "Shift starts or ends",
+        "fr": "Début ou fin de poste",
+        "de": "Schicht beginnt oder endet",
+        "es": "Empieza o termina un turno"
+      },
+      "description": {
+        "en": "A shift or an on-call period of a shared calendar starts or ends.",
+        "fr": "Un poste ou une astreinte d'un calendrier partagé commence ou se termine.",
+        "de": "Eine Schicht oder Bereitschaft eines geteilten Kalenders beginnt oder endet.",
+        "es": "Un turno o una guardia de un calendario compartido empieza o termina."
+      },
+      "fields": [
+        {
+          "key": "calendar",
+          "type": "string",
+          "label": {
+            "en": "Cycle calendar",
+            "fr": "Calendrier du cycle",
+            "de": "Zyklus-Kalender",
+            "es": "Calendario del ciclo"
+          },
+          "description": {
+            "en": "Exact name of a shared cycle calendar. Empty: any of them.",
+            "fr": "Nom exact d'un calendrier de cycle partagé. Vide : n'importe lequel.",
+            "de": "Genauer Name eines geteilten Zyklus-Kalenders. Leer: jeder.",
+            "es": "Nombre exacto de un calendario de ciclo compartido. Vacío: cualquiera."
+          },
+          "placeholder": {
+            "en": "e.g. Shared custody",
+            "fr": "ex. Garde alternée",
+            "de": "z. B. Wechselmodell",
+            "es": "p. ej. Custodia compartida"
+          }
+        },
+        {
+          "key": "change",
+          "type": "multi_select",
+          "label": {
+            "en": "Change",
+            "fr": "Changement",
+            "de": "Änderung",
+            "es": "Cambio"
+          },
+          "options": [
+            {
+              "value": "start",
+              "label": {
+                "en": "Shift starts",
+                "fr": "Début de poste",
+                "de": "Schichtbeginn",
+                "es": "Empieza el turno"
+              }
+            },
+            {
+              "value": "end",
+              "label": {
+                "en": "Shift ends",
+                "fr": "Fin de poste",
+                "de": "Schichtende",
+                "es": "Termina el turno"
+              }
+            }
+          ]
+        },
+        {
+          "key": "shift",
+          "type": "multi_select",
+          "label": {
+            "en": "Shift",
+            "fr": "Poste",
+            "de": "Schicht",
+            "es": "Turno"
+          },
+          "options": [
+            {
+              "value": "morning",
+              "label": {
+                "en": "Morning",
+                "fr": "Matin",
+                "de": "Früh",
+                "es": "Mañana"
+              }
+            },
+            {
+              "value": "afternoon",
+              "label": {
+                "en": "Afternoon",
+                "fr": "Après-midi",
+                "de": "Spät",
+                "es": "Tarde"
+              }
+            },
+            {
+              "value": "night",
+              "label": {
+                "en": "Night",
+                "fr": "Nuit",
+                "de": "Nacht",
+                "es": "Noche"
+              }
+            },
+            {
+              "value": "day",
+              "label": {
+                "en": "Day (12 h)",
+                "fr": "Jour (12 h)",
+                "de": "Tag (12 h)",
+                "es": "Día (12 h)"
+              }
+            },
+            {
+              "value": "on_call",
+              "label": {
+                "en": "On call",
+                "fr": "Astreinte",
+                "de": "Bereitschaft",
+                "es": "Guardia"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "calendar",
+          "type": "string",
+          "label": {
+            "en": "Calendar",
+            "fr": "Calendrier",
+            "de": "Kalender",
+            "es": "Calendario"
+          }
+        },
+        {
+          "key": "user",
+          "type": "string",
+          "label": {
+            "en": "Owner",
+            "fr": "Propriétaire",
+            "de": "Besitzer",
+            "es": "Propietario"
+          }
+        },
+        {
+          "key": "change",
+          "type": "string",
+          "label": {
+            "en": "Change (key)",
+            "fr": "Changement (clé)",
+            "de": "Änderung (Schlüssel)",
+            "es": "Cambio (clave)"
+          }
+        },
+        {
+          "key": "change_label",
+          "type": "string",
+          "label": {
+            "en": "Change",
+            "fr": "Changement",
+            "de": "Änderung",
+            "es": "Cambio"
+          }
+        },
+        {
+          "key": "shift",
+          "type": "string",
+          "label": {
+            "en": "Shift (key)",
+            "fr": "Poste (clé)",
+            "de": "Schicht (Schlüssel)",
+            "es": "Turno (clave)"
+          }
+        },
+        {
+          "key": "shift_label",
+          "type": "string",
+          "label": {
+            "en": "Shift",
+            "fr": "Poste",
+            "de": "Schicht",
+            "es": "Turno"
+          }
+        },
+        {
+          "key": "start",
+          "type": "string",
+          "label": {
+            "en": "Start",
+            "fr": "Début",
+            "de": "Beginn",
+            "es": "Inicio"
+          }
+        },
+        {
+          "key": "end",
+          "type": "string",
+          "label": {
+            "en": "End",
+            "fr": "Fin",
+            "de": "Ende",
+            "es": "Fin"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "cycle_status",
+      "label": {
+        "en": "Get where a cycle stands",
+        "fr": "Savoir où en est un cycle",
+        "de": "Stand eines Zyklus abfragen",
+        "es": "Consultar el estado de un ciclo"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "Children at home or not, today's shift, the next change and the minutes until it.",
+        "fr": "Enfants à la maison ou non, poste du jour, prochain changement et minutes d'ici là.",
+        "de": "Kinder zu Hause oder nicht, heutige Schicht, nächste Änderung und die Minuten bis dahin.",
+        "es": "Niños en casa o no, turno del día, próximo cambio y los minutos que faltan."
+      },
+      "timeout_seconds": 10,
       "fields": [
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "key": "calendar",
+          "type": "string",
+          "label": {
+            "en": "Cycle calendar",
+            "fr": "Calendrier du cycle",
+            "de": "Zyklus-Kalender",
+            "es": "Calendario del ciclo"
+          },
+          "description": {
+            "en": "Exact name of a shared cycle calendar. Empty: any of them.",
+            "fr": "Nom exact d'un calendrier de cycle partagé. Vide : n'importe lequel.",
+            "de": "Genauer Name eines geteilten Zyklus-Kalenders. Leer: jeder.",
+            "es": "Nombre exacto de un calendario de ciclo compartido. Vacío: cualquiera."
+          },
+          "placeholder": {
+            "en": "e.g. Shared custody",
+            "fr": "ex. Garde alternée",
+            "de": "z. B. Wechselmodell",
+            "es": "p. ej. Custodia compartida"
+          }
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "found",
+          "type": "number",
+          "label": {
+            "en": "Cycle found (1 yes, 0 no)",
+            "fr": "Cycle trouvé (1 oui, 0 non)",
+            "de": "Zyklus gefunden (1 ja, 0 nein)",
+            "es": "Ciclo encontrado (1 sí, 0 no)"
+          }
+        },
+        {
+          "key": "active",
+          "type": "number",
+          "label": {
+            "en": "Children here or on shift (1/0)",
+            "fr": "Enfants là ou en poste (1/0)",
+            "de": "Kinder da oder im Dienst (1/0)",
+            "es": "Niños aquí o de turno (1/0)"
+          }
+        },
+        {
+          "key": "state",
+          "type": "string",
+          "label": {
+            "en": "Now",
+            "fr": "Maintenant",
+            "de": "Jetzt",
+            "es": "Ahora"
+          }
+        },
+        {
+          "key": "today",
+          "type": "string",
+          "label": {
+            "en": "Today",
+            "fr": "Aujourd'hui",
+            "de": "Heute",
+            "es": "Hoy"
+          }
+        },
+        {
+          "key": "next_state",
+          "type": "string",
+          "label": {
+            "en": "Next",
+            "fr": "Ensuite",
+            "de": "Danach",
+            "es": "Después"
+          }
+        },
+        {
+          "key": "next_change",
+          "type": "string",
+          "label": {
+            "en": "Next change",
+            "fr": "Prochain changement",
+            "de": "Nächste Änderung",
+            "es": "Próximo cambio"
+          }
+        },
+        {
+          "key": "minutes_until_change",
+          "type": "number",
+          "label": {
+            "en": "Minutes until the change",
+            "fr": "Minutes avant le changement",
+            "de": "Minuten bis zur Änderung",
+            "es": "Minutos hasta el cambio"
+          }
+        },
+        {
+          "key": "calendar",
+          "type": "string",
+          "label": {
+            "en": "Calendar",
+            "fr": "Calendrier",
+            "de": "Kalender",
+            "es": "Calendario"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "cycles",
+      "label": {
+        "en": "Cycles",
+        "fr": "Cycles",
+        "de": "Zyklen",
+        "es": "Ciclos"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Who has the children, the shift in progress and the coming changes.",
+        "fr": "Qui a les enfants, le poste en cours et les prochains changements.",
+        "de": "Wer die Kinder hat, die laufende Schicht und die nächsten Wechsel.",
+        "es": "Quién tiene a los niños, el turno en curso y los próximos cambios."
+      },
+      "icon": "repeat",
+      "settings": [
+        {
+          "key": "calendars",
+          "type": "string",
+          "label": {
+            "en": "Calendars",
+            "fr": "Calendriers",
+            "de": "Kalender",
+            "es": "Calendarios"
+          },
+          "description": {
+            "en": "Names of shared cycle calendars, separated by commas. Empty: all of them.",
+            "fr": "Noms de calendriers de cycle partagés, séparés par des virgules. Vide : tous.",
+            "de": "Namen geteilter Zyklus-Kalender, durch Kommas getrennt. Leer: alle.",
+            "es": "Nombres de calendarios de ciclo compartidos, separados por comas. Vacío: todos."
+          },
+          "placeholder": {
+            "en": "e.g. Shared custody",
+            "fr": "ex. Garde alternée",
+            "de": "z. B. Wechselmodell",
+            "es": "p. ej. Custodia compartida"
+          }
+        },
+        {
+          "key": "show_upcoming",
+          "type": "boolean",
+          "label": {
+            "en": "Show the coming changes",
+            "fr": "Afficher les prochains changements",
+            "de": "Nächste Wechsel anzeigen",
+            "es": "Mostrar los próximos cambios"
+          },
+          "default": true
+        },
+        {
+          "key": "days",
+          "type": "select",
+          "label": {
+            "en": "Coming changes over",
+            "fr": "Prochains changements sur",
+            "de": "Nächste Wechsel über",
+            "es": "Próximos cambios durante"
+          },
+          "default": "7",
+          "options": [
+            {
+              "value": "3",
+              "label": {
+                "en": "3 days",
+                "fr": "3 jours",
+                "de": "3 Tage",
+                "es": "3 días"
+              }
+            },
+            {
+              "value": "7",
+              "label": {
+                "en": "7 days",
+                "fr": "7 jours",
+                "de": "7 Tage",
+                "es": "7 días"
+              }
+            },
+            {
+              "value": "14",
+              "label": {
+                "en": "14 days",
+                "fr": "14 jours",
+                "de": "14 Tage",
+                "es": "14 días"
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

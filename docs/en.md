@@ -1,61 +1,152 @@
-# Demo Devices Template
+# Cycles
 
-This is the user documentation of the integration. Gladys re-hosts this file
-and shows a permanent **Documentation** link to it in the Configuration screen
-(in the user's language, with English as the fallback) — it is when
-configuring that the user needs it most. Keep the short onboarding hints in
-the `section` blocks of the manifest `config_schema`; put the long
-step-by-step (screenshots, troubleshooting…) here.
+Shared custody and shift work, as Gladys calendars. Pick a model (one week in two, 2-2-3, 5x8,
+12-hour shifts, on-call weeks…) and the date its first day fell on: the integration generates the
+calendar months ahead, and keeps it up to date every night. Nothing is downloaded, no account is
+needed: every event is computed inside Gladys.
 
 ## What you get
 
-Six demo devices show up after installation: a weather station (real data
-from Open-Meteo), a switch, a dimmable light, a smart plug with power
-metering, a motion sensor and a camera.
+- **One calendar per cycle**, up to three per user: "Children with me" / "Children with the other
+  parent" from one handover to the next, or "Morning shift", "Night shift", "On call"… with their
+  hours. They appear in the Gladys calendar view like any other calendar.
+- **Two scene triggers**: the children arrive or leave, a shift starts or ends.
+- **A scene action** telling where a cycle stands: children at home or not, today's shift, the next
+  change and the minutes until it.
+- **A dashboard widget**: who has the children, the shift in progress and the coming changes.
+- Because they are ordinary calendars, the built-in Gladys scenes work too: "an event is coming",
+  "is an event running".
 
-## Configuration
+## Set up your cycles
 
-1. Open the **Configuration** tab of the integration.
-2. Set the **latitude** and **longitude** the demo weather station should
-   observe (they default to Paris), and pick your temperature unit.
-   The **refresh interval** sets how often the weather station and the
-   plug's power are read: every 5 minutes by default, every minute at most.
-3. Save: the devices appear in the **Discovery** tab, ready to be added.
+Each user sets up their own cycles: open **Integrations → Cycles**, then the **My calendars**
+block. Fill in a slot, then **Enable** (or **Save**). For each cycle:
 
-The **Prefer the local connection** toggle drives the demo plug: it reports
-the channel it actually uses as a badge (local or cloud), with an orange dot
-when it runs degraded (local refused, cloud fallback).
+- **Model**: see the lists below. "Not used" leaves the slot empty (and removes its calendar).
+- **Calendar name**: optional. Scenes and the widget refer to the cycle by this name.
+- **Start date**: the first day of the model, for instance the Friday the children arrived at your
+  place for the first week. It can be years ago: the integration counts the days. Write it
+  `2026-09-04` or `04/09/2026` (day first).
+- **Handover time**: when the children change homes, or when an on-call week starts. Empty: 18:00
+  for custody, 08:00 for on-call duty. `18:00`, `18h` and `18h30` are understood.
+- **On the start date**: custody only, who has the children on the start date. For the weekend
+  models, "With the other parent" swaps the roles.
+- **Custom pattern** and **Shift hours**: see below.
 
-## Actions
+Then **share** the calendar in the list under the form: a shared calendar is seen by the whole
+household, on the dashboard and by the scenes. A private calendar only shows in your own calendar
+view.
 
-- **Test the weather provider** — performs a live request to Open-Meteo and
-  shows the current temperature and humidity under the button.
-- **Identify a device** — pick one of your devices in the list and it will
-  signal itself (the demo light "blinks" in the logs).
+### Custody models
 
-## Scenes
+| Model                     | Pattern (from the start date)                                                     |
+| ------------------------- | --------------------------------------------------------------------------------- |
+| One week in two           | 7 days with you, 7 days with the other parent                                     |
+| 2-2-3                     | 2, 2, 3 days in turn: the long weekend goes to each parent every other week       |
+| 2-2-5-5                   | 2 days with you, 2 with the other parent, 5 with you, 5 with the other parent     |
+| 3-4-4-3                   | 3 days with you, 4 with the other parent, 4 with you, 3 with the other parent     |
+| 1st, 3rd and 5th weekends | Friday to Sunday, the weekends whose Saturday is the 1st, 3rd or 5th of the month |
+| 2nd and 4th weekends      | the same with the 2nd and 4th Saturdays                                           |
 
-The integration adds its own cards to the scene editor (Gladys 5.1 or
-later), under the **Integrations** category:
+Every period runs from the handover time of its first day to the handover time of the day after
+its last day: with the 2-2-3 model starting on a Monday at 18:00, the children are with you from
+Monday 18:00 to Wednesday 18:00. The weekend models do not need a start date: the weekends are
+counted by their Saturday, the usual rule of French court decisions.
 
-- **Motion detected** (trigger) — starts the scene when a demo motion sensor
-  sees something move. Optionally pick the sensor and what moved (person,
-  animal); left empty, any detection matches. The following actions can
-  read what moved with `{{triggerEvent.data.target}}`.
-- **Identify a device** (action) — makes the chosen device signal itself.
-  It returns whether the device could signal itself, so the following
-  actions can depend on it.
+### Shift work models
 
-## Dashboard
+| Model                  | Pattern                                                 | Default hours                |
+| ---------------------- | ------------------------------------------------------- | ---------------------------- |
+| 2x8                    | 5 mornings, 2 days off, 5 afternoons, 2 days off        | 06:00-14:00, 14:00-22:00     |
+| 3x8 by week            | 5 mornings, 2 off, 5 afternoons, 2 off, 5 nights, 2 off | night 22:00-06:00            |
+| 5x8 continuous         | 2 mornings, 2 afternoons, 2 nights, 4 days off          | same                         |
+| 12 h day / night       | 2 days, 2 nights, 4 days off                            | 07:00-19:00, 19:00-07:00     |
+| On call: one week in N | 7 days on call, then N-1 weeks off                      | from the handover time, 24 h |
 
-Add the **Demo status** widget to a dashboard: it shows the live
-temperature of the weather station and the power of the office plug, the
-connection the plug currently uses (orange when degraded) and the observed
-location. Its **Identify the light** button makes the demo light signal
-itself.
+A night shift belongs to the day it starts: in the calendar and for "today's shift", the Monday
+night runs from Monday 22:00 to Tuesday 06:00. Consecutive on-call days make one event.
+
+### Custom patterns
+
+- **Custody, custom**: the number of days of each block, the parents alternating at every block,
+  starting with the one chosen in "On the start date". `2/2/5/5` is the 2-2-5-5 model; `7` is one
+  week in two; with an odd number of blocks (`2/2/3`), the parents swap on the next round. Blocks
+  of 1 to 31 days.
+- **Shifts, custom**: days and letters, `M` morning, `A` afternoon, `N` night, `D` (or `J`) 12-hour
+  day, `O` on call, `R` rest. `2M 2A 2N 4R` and `MMAANNRRRR` are the same pattern. Up to 140 days.
+- **Shift hours**: only what differs from `M=06:00-14:00; A=14:00-22:00; N=22:00-06:00;
+D=07:00-19:00`, for instance `M=05:00-13:00; N=21:00-05:00`. An end before the start is the next
+  day.
+
+## Administrator settings
+
+- **Generate events up to**: 3, 6 or 12 months ahead (6 by default). The calendars slide every
+  night: the past week stays, this horizon is kept ahead. Older events stay as history.
+- **Language of the scene texts**: the labels and dates handed to the scenes. The calendars
+  themselves follow the language of their owner.
+
+## In Gladys
+
+The calendars carry a description: the start date and the handover time, or why the calendar is
+empty when a field cannot be read. Changing a setting regenerates the calendar at once, without
+duplicates. Switching a calendar's synchronization off in "My calendars" empties it; switching it
+back on fills it again.
+
+## Dashboard widget
+
+Add the **Cycles** widget to a dashboard. It shows a line per shared cycle (green when the children
+are with you or a shift is running), then the changes of the coming 3, 7 or 14 days. Settings: the
+calendars to show (names separated by commas, empty: all of them), the period, and a switch to
+hide the coming changes.
+
+## Scene triggers
+
+- **Children arrive or leave**: at the handover time of a shared custody calendar. Filters: the
+  calendar, arrival and/or departure. Variables: the calendar, its owner, the change, "children
+  with me" (1 or 0) and the next handover.
+- **Shift starts or ends**: a shift or an on-call period of a shared calendar starts or ends.
+  Filters: the calendar, start and/or end, the kind of shift (night only…). Variables: the
+  calendar, its owner, the change, the shift, its start and end.
+
+A trigger fires within 30 seconds of the change. Nothing fires when the integration starts or when
+you change a setting.
+
+## Scene action
+
+**Get where a cycle stands** (optionally by calendar name, else the first shared cycle) returns:
+`found` (1/0), `active` (1 when the children are with you or a shift is running), the current
+state, today's shift (or who has the children at noon), the next state, the next change and the
+minutes until it (-1 when there is none).
+
+## Scene examples
+
+- Children arrive → heating in their bedrooms to comfort mode; they leave → back to eco.
+- Every evening at 21:00, get where the "Work" cycle stands: if today's shift is a morning shift,
+  set the alarm-clock scene for 05:00.
+- Night shift starts → silent mode for the house notifications until it ends.
+- Wednesday 17:00, children not here (`active` = 0) → skip the "back from school" scene.
 
 ## Troubleshooting
 
-The integration logs everything it does: check the integration logs from the
-Gladys UI (or `docker logs` on the host) with `LOG_LEVEL=debug` for the full
-detail.
+- **The calendar is empty**: read its description in the calendar view, it says which field cannot
+  be read. Check the start date (`2026-09-04` or `04/09/2026`) and the custom pattern.
+- **The calendar is shifted by one period**: the start date is the first day of the model, the day
+  the children arrived (or "On the start date" says the other parent). Change it and save.
+- **No scene runs**: the calendar must be shared, and the name typed in the scene must be the
+  calendar name (case and accents do not matter).
+- **The widget says that nothing is shared**: share the calendar in "My calendars".
+
+## Limits
+
+- **School holidays shared by halves are not handled**: their rules (which half, which year, the
+  zone) differ too much between judgments. During the holidays, edit the start date or the model,
+  or add the holidays to the calendar by hand.
+- One handover time per cycle (the same on Friday and on Sunday for the weekend models).
+- Public holidays do not move anything: the cycles keep running.
+- Up to three cycles per user; three months to one year ahead.
+
+## Privacy
+
+Nothing leaves Gladys: the integration makes no network request outside Gladys and stores nothing
+in its volume. The cycles are in your account settings, the calendars are private until you share
+them. Not affiliated with any employer or court.

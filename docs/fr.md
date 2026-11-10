@@ -1,67 +1,160 @@
-# Template de démonstration
+# Cycles
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Garde alternée et travail posté, en calendriers Gladys. Choisissez un modèle (une semaine sur deux,
+2-2-3, 5x8, postes de 12 h, semaines d'astreinte…) et la date de son premier jour : l'intégration
+génère le calendrier des mois à l'avance et le tient à jour chaque nuit. Rien n'est téléchargé, aucun
+compte n'est nécessaire : chaque événement est calculé dans Gladys.
 
 ## Ce que vous obtenez
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+- **Un calendrier par cycle**, trois au plus par utilisateur : « Enfants chez moi » / « Enfants chez
+  l'autre parent » d'un passage au suivant, ou « Poste du matin », « Poste de nuit », « Astreinte »…
+  avec leurs horaires. Ils s'affichent dans la vue calendrier de Gladys comme n'importe quel
+  calendrier.
+- **Deux déclencheurs de scène** : arrivée ou départ des enfants, début ou fin de poste.
+- **Une action de scène** qui dit où en est un cycle : enfants à la maison ou non, poste du jour,
+  prochain changement et minutes d'ici là.
+- **Un widget de tableau de bord** : qui a les enfants, le poste en cours et les prochains
+  changements.
+- Comme ce sont des calendriers ordinaires, les scènes intégrées de Gladys marchent aussi :
+  « un événement arrive », « un événement est-il en cours ».
 
-## Configuration
+## Régler vos cycles
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+Chaque utilisateur règle ses propres cycles : ouvrez **Intégrations → Cycles**, puis le bloc **Mes
+calendriers**. Remplissez un emplacement, puis **Activer** (ou **Enregistrer**). Pour chaque cycle :
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+- **Modèle** : voir les listes ci-dessous. « Non utilisé » laisse l'emplacement vide (et retire son
+  calendrier).
+- **Nom du calendrier** : facultatif. Les scènes et le widget désignent le cycle par ce nom.
+- **Date de départ** : le premier jour du modèle, par exemple le vendredi où les enfants sont arrivés
+  chez vous pour la première semaine. Elle peut dater de plusieurs années : l'intégration compte les
+  jours. Écrivez-la `04/09/2026` ou `2026-09-04`.
+- **Heure de passage** : quand les enfants changent de maison, ou quand une semaine d'astreinte
+  commence. Vide : 18:00 pour la garde, 08:00 pour l'astreinte. `18:00`, `18h` et `18h30` sont
+  compris.
+- **À la date de départ** : garde seulement, qui a les enfants à la date de départ. Pour les modèles
+  de week-ends, « Chez l'autre parent » inverse les rôles.
+- **Suite personnalisée** et **Horaires des postes** : voir plus bas.
 
-## Actions
+Ensuite, **partagez** le calendrier dans la liste sous le formulaire : un calendrier partagé est vu
+par tout le foyer, sur le tableau de bord et par les scènes. Un calendrier privé ne s'affiche que
+dans votre propre vue calendrier.
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+### Modèles de garde
 
-## Scènes
+| Modèle                  | Suite (à partir de la date de départ)                                              |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| Une semaine sur deux    | 7 jours chez vous, 7 jours chez l'autre parent                                     |
+| 2-2-3                   | 2, 2, 3 jours en alternance : le long week-end change de parent chaque semaine     |
+| 2-2-5-5                 | 2 jours chez vous, 2 chez l'autre parent, 5 chez vous, 5 chez l'autre parent       |
+| 3-4-4-3                 | 3 jours chez vous, 4 chez l'autre parent, 4 chez vous, 3 chez l'autre parent       |
+| 1er, 3e et 5e week-ends | du vendredi au dimanche, les week-ends dont le samedi est le 1er, 3e ou 5e du mois |
+| 2e et 4e week-ends      | la même chose avec les 2e et 4e samedis                                            |
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+Chaque période va de l'heure de passage de son premier jour à l'heure de passage du lendemain de son
+dernier jour : avec le modèle 2-2-3 parti un lundi à 18:00, les enfants sont chez vous du lundi 18:00
+au mercredi 18:00. Les modèles de week-ends n'ont pas besoin de date de départ : les week-ends se
+comptent par leur samedi, la règle habituelle des jugements.
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+### Modèles de travail posté
 
-## Tableau de bord
+| Modèle                      | Suite                                                      | Horaires par défaut             |
+| --------------------------- | ---------------------------------------------------------- | ------------------------------- |
+| 2x8                         | 5 matins, 2 jours de repos, 5 après-midi, 2 de repos       | 06:00-14:00, 14:00-22:00        |
+| 3x8 par semaine             | 5 matins, 2 repos, 5 après-midi, 2 repos, 5 nuits, 2 repos | nuit 22:00-06:00                |
+| 5x8 en continu              | 2 matins, 2 après-midi, 2 nuits, 4 jours de repos          | idem                            |
+| 12 h jour / nuit            | 2 jours, 2 nuits, 4 jours de repos                         | 07:00-19:00, 19:00-07:00        |
+| Astreinte une semaine sur N | 7 jours d'astreinte, puis N-1 semaines sans                | depuis l'heure de passage, 24 h |
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+Un poste de nuit appartient au jour où il commence : dans le calendrier et pour le « poste du
+jour », la nuit du lundi va du lundi 22:00 au mardi 06:00. Des jours d'astreinte consécutifs font un
+seul événement.
+
+### Suites personnalisées
+
+- **Garde personnalisée** : le nombre de jours de chaque bloc, les parents alternant à chaque bloc,
+  en commençant par celui choisi dans « À la date de départ ». `2/2/5/5` est le modèle 2-2-5-5 ; `7`
+  est une semaine sur deux ; avec un nombre impair de blocs (`2/2/3`), les parents s'inversent au
+  tour suivant. Blocs de 1 à 31 jours.
+- **Postes personnalisés** : des jours et des lettres, `M` matin, `A` après-midi, `N` nuit, `J` (ou
+  `D`) jour de 12 h, `O` astreinte, `R` repos. `2M 2A 2N 4R` et `MMAANNRRRR` sont la même suite.
+  Jusqu'à 140 jours.
+- **Horaires des postes** : seulement ce qui diffère de `M=06:00-14:00; A=14:00-22:00;
+N=22:00-06:00; J=07:00-19:00`, par exemple `M=05:00-13:00; N=21:00-05:00`. Une fin avant le
+  début tombe le lendemain.
+
+## Réglages de l'administrateur
+
+- **Générer les événements jusqu'à** : 3, 6 ou 12 mois à l'avance (6 par défaut). Les calendriers
+  glissent chaque nuit : la semaine passée reste, cet horizon est gardé devant. Les événements plus
+  anciens restent en historique.
+- **Langue des textes des scènes** : les libellés et dates transmis aux scènes. Les calendriers
+  eux-mêmes suivent la langue de leur propriétaire.
+
+## Dans Gladys
+
+Les calendriers portent une description : la date de départ et l'heure de passage, ou la raison
+pour laquelle le calendrier est vide quand un champ est illisible. Changer un réglage régénère le
+calendrier aussitôt, sans doublons. Couper la synchronisation d'un calendrier dans « Mes calendriers »
+le vide ; la rétablir le remplit à nouveau.
+
+## Widget du tableau de bord
+
+Ajoutez le widget **Cycles** à un tableau de bord. Il montre une ligne par cycle partagé (en vert
+quand les enfants sont chez vous ou qu'un poste est en cours), puis les changements des 3, 7 ou 14
+prochains jours. Réglages : les calendriers à afficher (noms séparés par des virgules, vide : tous),
+la période, et un interrupteur pour masquer les prochains changements.
+
+## Déclencheurs de scène
+
+- **Arrivée ou départ des enfants** : à l'heure de passage d'un calendrier de garde partagé.
+  Filtres : le calendrier, arrivée et/ou départ. Variables : le calendrier, son propriétaire, le
+  changement, « enfants chez moi » (1 ou 0) et le prochain passage.
+- **Début ou fin de poste** : un poste ou une astreinte d'un calendrier partagé commence ou se
+  termine. Filtres : le calendrier, début et/ou fin, le type de poste (nuit seulement…). Variables :
+  le calendrier, son propriétaire, le changement, le poste, son début et sa fin.
+
+Un déclencheur part dans les 30 secondes qui suivent le changement. Rien ne part au démarrage de
+l'intégration ni quand vous changez un réglage.
+
+## Action de scène
+
+**Savoir où en est un cycle** (par nom de calendrier, sinon le premier cycle partagé) renvoie :
+`found` (1/0), `active` (1 quand les enfants sont chez vous ou qu'un poste est en cours), l'état
+actuel, le poste du jour (ou qui a les enfants à midi), l'état suivant, le prochain changement et les
+minutes d'ici là (-1 s'il n'y en a pas).
+
+## Exemples de scènes
+
+- Arrivée des enfants → chauffage de leurs chambres en confort ; départ → retour en éco.
+- Chaque soir à 21:00, savoir où en est le cycle « Travail » : si le poste du jour est un matin,
+  programmer la scène réveil à 05:00.
+- Début d'un poste de nuit → mode silencieux pour les notifications de la maison jusqu'à sa fin.
+- Mercredi 17:00, enfants absents (`active` = 0) → ne pas lancer la scène « retour de l'école ».
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **Le calendrier est vide** : lisez sa description dans la vue calendrier, elle dit quel champ est
+  illisible. Vérifiez la date de départ (`04/09/2026` ou `2026-09-04`) et la suite personnalisée.
+- **Le calendrier est décalé d'une période** : la date de départ est le premier jour du modèle, le
+  jour où les enfants sont arrivés (sinon « À la date de départ » doit dire l'autre parent). Corrigez
+  et enregistrez.
+- **Aucune scène ne part** : le calendrier doit être partagé, et le nom tapé dans la scène doit être
+  celui du calendrier (majuscules et accents ne comptent pas).
+- **Le widget dit que rien n'est partagé** : partagez le calendrier dans « Mes calendriers ».
+
+## Limites
+
+- **Les vacances scolaires partagées par moitié ne sont pas gérées** : leurs règles (quelle moitié,
+  quelle année, quelle zone) varient trop d'un jugement à l'autre. Pendant les vacances, changez la
+  date de départ ou le modèle, ou ajoutez les vacances au calendrier à la main.
+- Une seule heure de passage par cycle (la même le vendredi et le dimanche pour les week-ends).
+- Les jours fériés ne décalent rien : les cycles continuent.
+- Trois cycles au plus par utilisateur ; de trois mois à un an à l'avance.
+
+## Confidentialité
+
+Rien ne sort de Gladys : l'intégration ne fait aucune requête réseau en dehors de Gladys et n'écrit
+rien dans son volume. Les cycles sont dans les réglages de votre compte, les calendriers restent
+privés tant que vous ne les partagez pas. Sans lien avec un employeur ou un tribunal.

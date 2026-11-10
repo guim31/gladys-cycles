@@ -30,6 +30,11 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+The integration makes no network request outside Gladys and writes nothing in
+its `/data` volume. It handles no secret: the cycles (model, start date,
+handover time, shift hours) are stored by Gladys in each user's account
+settings, and the calendars it generates stay private until their owner shares
+them.
+
 Out of scope: Gladys Assistant itself (see its
-[security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+[security policy](https://github.com/GladysAssistant/Gladys/security/policy)).
