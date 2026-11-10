@@ -140,8 +140,7 @@ minutes d'ici là (-1 s'il n'y en a pas).
 - **Le calendrier est décalé d'une période** : la date de départ est le premier jour du modèle, le
   jour où les enfants sont arrivés (sinon « À la date de départ » doit dire l'autre parent). Corrigez
   et enregistrez.
-- **Aucune scène ne part** : le calendrier doit être partagé, et le nom tapé dans la scène doit être
-  celui du calendrier (majuscules et accents ne comptent pas).
+- **Aucune scène ne part** : le calendrier doit être partagé, et le filtre d'un déclencheur demande le nom exact du calendrier (l'action de scène ignore majuscules et accents).
 - **Le widget dit que rien n'est partagé** : partagez le calendrier dans « Mes calendriers ».
 
 ## Limites

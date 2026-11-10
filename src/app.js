@@ -18,6 +18,10 @@ const logger = createLogger({ name: 'app' });
 export const TICK_MS = 30_000;
 // The window slides once a day, a few minutes after local midnight.
 const DAILY_AT_MINUTES = 5;
+// A failed synchronization (the core still starting, a 429) is retried after
+// 30 s, then twice as late each time, up to 15 minutes.
+const RETRY_MIN_MS = 30_000;
+const RETRY_MAX_MS = 15 * 60_000;
 
 /**
  * @param {import('@gladysassistant/integration-sdk').GladysIntegration} gladys
@@ -35,6 +39,8 @@ export function registerHandlers(gladys, deps = {}) {
   let stopped = false;
   let pending = Promise.resolve();
   let failing = false;
+  let retryTimer = null;
+  let retryMs = RETRY_MIN_MS;
 
   const syncer = new Syncer({
     gladys,
@@ -54,6 +60,9 @@ export function registerHandlers(gladys, deps = {}) {
         failing = false;
         logger.info('Synchronization works again');
       }
+      clearTimeout(retryTimer);
+      retryTimer = null;
+      retryMs = RETRY_MIN_MS;
       refreshWidget();
       return result;
     } catch (err) {
@@ -63,8 +72,24 @@ export function registerHandlers(gladys, deps = {}) {
       } else {
         logger.debug(`${label} failed again: ${describe(err)}`);
       }
+      scheduleRetry();
       return undefined;
     }
+  }
+
+  // Every user is re-read on a retry: whatever failed is redone.
+  function scheduleRetry() {
+    if (!useTimers || stopped || retryTimer) {
+      return;
+    }
+    retryTimer = setTimeout(async () => {
+      retryTimer = null;
+      if (gladys.connected !== false) {
+        await run('Synchronization', () => syncer.syncAll());
+      }
+    }, retryMs);
+    retryTimer.unref?.();
+    retryMs = Math.min(retryMs * 2, RETRY_MAX_MS);
   }
 
   async function tick() {
@@ -130,6 +155,8 @@ export function registerHandlers(gladys, deps = {}) {
   });
 
   gladys.on('disconnected', () => {
+    clearTimeout(retryTimer);
+    retryTimer = null;
     clearTimeout(dailyTimer);
     clearInterval(tickTimer);
   });
@@ -148,12 +175,7 @@ export function registerHandlers(gladys, deps = {}) {
 
   gladys.onCalendarAccountUpdated(async (userSelector) => {
     logger.info(`Cycles of ${userSelector} updated`);
-    // New settings move the periods under the watcher: once they are
-    // generated, record where the cycles stand, never fire.
-    pending = run('Synchronization', () => syncer.syncUser(userSelector)).then(() => {
-      watcher.reset(userSelector);
-      return tick();
-    });
+    pending = run('Synchronization', () => syncer.syncUser(userSelector)).then(() => tick());
   });
 
   gladys.onSceneAction('cycle_status', (fields) =>
@@ -174,6 +196,7 @@ export function registerHandlers(gladys, deps = {}) {
     },
     async stop() {
       stopped = true;
+      clearTimeout(retryTimer);
       clearTimeout(dailyTimer);
       clearInterval(tickTimer);
     },

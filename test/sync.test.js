@@ -163,3 +163,80 @@ test('the write limiter waits once 25 writes were made within a minute', async (
   }
   assert.deepEqual(waits, [60_000]);
 });
+
+test('a shorter horizon removes the events beyond it', async () => {
+  const world = await createWorld({
+    accounts: [account('alice', custody)],
+    config: { horizon_months: '12' },
+  });
+  const id = 'ext:test-integration:alice:cycle-1';
+  const lastOf = () => Date.parse(world.eventsOf(id).at(-1).start);
+  assert.ok(lastOf() > NOW + 360 * DAY);
+  await world.fake.configUpdated({ horizon_months: '3' });
+  await world.app.idle();
+  assert.ok(lastOf() < NOW + 95 * DAY);
+});
+
+test('two cycles under the same name get their slot number', async () => {
+  const world = await createWorld({
+    accounts: [
+      account('alice', {
+        cycle_1_type: 'custody_1_1',
+        cycle_1_start: '2026-09-04',
+        cycle_3_type: 'custody_weekends_2_4',
+      }),
+    ],
+  });
+  assert.deepEqual(
+    world.fake.calendars.map((c) => c.name),
+    ['Garde alternée', 'Garde alternée (3)'],
+  );
+});
+
+test('a calendar switched off during the synchronization does not stop the others', async (t) => {
+  const world = await createWorld({ accounts: [account('alice', { ...custody, ...shifts })] });
+  const original = world.gladys.publishCalendarEvents.bind(world.gladys);
+  t.mock.method(world.gladys, 'publishCalendarEvents', async (id, events, window) => {
+    if (id.endsWith('cycle-1')) {
+      const err = new Error('calendar sync disabled');
+      err.status = 403;
+      throw err;
+    }
+    return original(id, events, window);
+  });
+  world.clock.now = NOW + DAY;
+  await world.syncer.syncAll();
+  const calls = world.gladys.publishCalendarEvents.mock.calls.map((call) => call.arguments[0]);
+  assert.deepEqual(calls, [
+    'ext:test-integration:alice:cycle-1',
+    'ext:test-integration:alice:cycle-2',
+  ]);
+  const [first] = world.syncer.users.get('alice').cycles;
+  assert.equal(first.sync, false);
+});
+
+test('a failed first synchronization is retried', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+  const { createFakeGladys } = await import('@gladysassistant/integration-sdk/testing');
+  const { registerHandlers } = await import('../src/app.js');
+  const gladys = createFakeGladys({ calendarAccounts: [account('alice', custody)] });
+  let fail = true;
+  const original = gladys.getCalendarAccounts.bind(gladys);
+  t.mock.method(gladys, 'getCalendarAccounts', async () => {
+    if (fail) {
+      throw new Error('core starting');
+    }
+    return original();
+  });
+  const app = registerHandlers(gladys, { now: () => NOW, sleep: async () => {} });
+  await gladys.connect();
+  await app.idle();
+  assert.equal(app.syncer.ready, false);
+  fail = false;
+  t.mock.timers.tick(30_000);
+  await new Promise((resolve) => setImmediate(resolve));
+  await app.idle();
+  assert.equal(app.syncer.ready, true);
+  assert.equal(gladys.fake.calendars.length, 1);
+  await app.stop();
+});

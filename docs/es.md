@@ -137,8 +137,7 @@ próximo cambio y los minutos que faltan (-1 si no hay ninguno).
 - **El calendario está desplazado un periodo**: la fecha de inicio es el primer día del modelo, el
   día en que llegaron los niños (si no, «En la fecha de inicio» debe indicar el otro progenitor).
   Corríjala y guarde.
-- **No se lanza ninguna escena**: el calendario debe estar compartido, y el nombre escrito en la
-  escena debe ser el del calendario (mayúsculas y acentos no importan).
+- **No se lanza ninguna escena**: el calendario debe estar compartido, y el filtro de un desencadenante necesita el nombre exacto del calendario (la acción de escena ignora mayúsculas y acentos).
 - **El widget dice que no hay nada compartido**: comparta el calendario en «Mis calendarios».
 
 ## Límites

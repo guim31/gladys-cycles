@@ -132,8 +132,7 @@ minutes until it (-1 when there is none).
   be read. Check the start date (`2026-09-04` or `04/09/2026`) and the custom pattern.
 - **The calendar is shifted by one period**: the start date is the first day of the model, the day
   the children arrived (or "On the start date" says the other parent). Change it and save.
-- **No scene runs**: the calendar must be shared, and the name typed in the scene must be the
-  calendar name (case and accents do not matter).
+- **No scene runs**: the calendar must be shared, and the trigger filter needs the exact calendar name (the scene action ignores case and accents).
 - **The widget says that nothing is shared**: share the calendar in "My calendars".
 
 ## Limits

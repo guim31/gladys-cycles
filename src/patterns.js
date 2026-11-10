@@ -281,8 +281,11 @@ export function dayCode(cycle, date) {
 
 // Periods are computed from this many days before the window and after it,
 // so that one running at its start or its end (a custody week, an on-call
-// week) keeps its real start and end.
-const MARGIN_DAYS = 2 * MAX_BLOCK_DAYS;
+// week, a long custom block) keeps its real start and end: two rounds of the
+// cycle cover any run, even one wrapping from the end of the cycle to its
+// start.
+const marginDays = (cycle) =>
+  Math.max(2 * MAX_BLOCK_DAYS, 2 * (cycle.sides ?? cycle.codes ?? []).length);
 
 /**
  * The periods of a cycle overlapping the local days `fromDate` to `toDate`
@@ -299,8 +302,9 @@ export function periods(cycle, fromDate, toDate) {
   const windowEnd = localTime(addDays(toDate, 1), 0);
   const list = [];
   let previous = null;
-  const lastDate = addDays(toDate, MARGIN_DAYS);
-  for (let date = addDays(fromDate, -MARGIN_DAYS); date <= lastDate; date = addDays(date, 1)) {
+  const margin = marginDays(cycle);
+  const lastDate = addDays(toDate, margin);
+  for (let date = addDays(fromDate, -margin); date <= lastDate; date = addDays(date, 1)) {
     const code = dayCode(cycle, date);
     if (code === null || code === 'rest') {
       previous = null;

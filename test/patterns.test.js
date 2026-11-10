@@ -225,3 +225,16 @@ test('stateAt: the running period, then the next change', () => {
   assert.equal(evening.next.code, 'afternoon');
   assert.equal(evening.changeAt, Date.parse('2026-10-19T14:00:00+02:00'));
 });
+
+test('a long custom block keeps its real start whatever the window', () => {
+  const cycle = buildCycle(1, {
+    type: 'shift_custom',
+    start: '2026-01-01',
+    pattern: '80O 5R',
+    time: '08:00',
+  });
+  const starts = ['2026-03-01', '2026-03-10', '2026-03-20'].map(
+    (from) => periods(cycle, from, from)[0].startDate,
+  );
+  assert.deepEqual(starts, ['2026-01-01', '2026-01-01', '2026-01-01']);
+});

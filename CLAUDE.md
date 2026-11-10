@@ -272,13 +272,18 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
   fait ~375 événements, sous les 500 d'une requête ; au-delà, la liste et la fenêtre sont coupées.
 - Les périodes se calculent en **jours locaux** (`TZ` du superviseur) puis `new Date(y, m, d, h, mi)` :
   l'heure de passage reste 18:00 aux changements d'heure (un week-end de 71 h ou 73 h). Les périodes
-  sont calculées avec 62 jours de marge de part et d'autre de la fenêtre, pour qu'une semaine en cours
+  sont calculées avec une marge de deux tours du cycle (62 jours au moins) de part et d'autre de la fenêtre, pour qu'une semaine en cours
   garde ses vrais début et fin (sinon son id, qui contient la date de début, changerait).
 - Ids : calendrier `<user>:cycle-<n>`, événement `<user>:cycle-<n>:<date de début>:<code>`. Changer de
   modèle dans un emplacement change les ids : l'élagage de la fenêtre retire les anciens.
 - Déclencheurs : un minuteur de 30 s compare la période en cours à la précédente, **par valeur** (chaque
   synchronisation reconstruit les objets). Le premier regard (démarrage, calendrier qui devient partagé)
-  et le regard qui suit une modification du compte (`reset`) n'émettent rien.
+  n'émet rien, ni un changement dont l'heure n'est pas dans les 5 dernières minutes (`FRESH_MS`) : une
+  modification des réglages ou une reconnexion des heures plus tard ne déclenche aucune scène.
+- La fenêtre élaguée va toujours jusqu'à l'horizon le plus long (12 mois), les événements jusqu'à
+  l'horizon choisi : raccourcir l'horizon retire ce qui dépasse.
+- Une synchronisation ratée (cœur qui démarre, 429) est reprise après 30 s, puis deux fois plus tard,
+  jusqu'à 15 min. Un 403/404 sur un calendrier (coupé entre-temps) n'arrête pas les autres.
 - Une langue par utilisateur (`getCalendarAccounts()[].user.language`) pour les noms d'événements et
   la description du calendrier ; le réglage `language` ne sert qu'aux textes des scènes.
 - Un champ illisible ne crée pas d'erreur silencieuse : le calendrier est publié vide, sa description

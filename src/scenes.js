@@ -27,6 +27,8 @@ export const TRIGGERS = {
 export const SCENE_TRIGGER_KEYS = Object.values(TRIGGERS);
 export const CUSTODY_CHANGES = ['arrival', 'departure'];
 export const SHIFT_CHANGES = ['start', 'end'];
+// A transition is reported within this delay of its time, never later.
+export const FRESH_MS = 5 * 60_000;
 export { SHIFT_CODES };
 
 /** Lowercase, without accents nor extra blanks: "Garde  alternée" matches "garde alternee". */
@@ -62,10 +64,15 @@ export function transitionEvents(entry, before, after, language, now) {
   const names = pick(STATE_TEXT, language);
   const base = { calendar: entry.name, user: entry.user };
   const events = [];
+  // Only a change that just happened is a transition. A boundary in the
+  // future or long gone means the periods moved under the watcher (new
+  // settings, a calendar back from a pause, a reconnection hours later):
+  // record it, fire nothing.
+  const fresh = (time) => time !== undefined && time <= now && now - time <= FRESH_MS;
   if (entry.cycle.kind === CUSTODY) {
     const was = before?.code === 'me';
     const is = after?.code === 'me';
-    if (was !== is) {
+    if (was !== is && fresh(after?.start ?? before?.end)) {
       const change = is ? 'arrival' : 'departure';
       const { changeAt } = stateAt(entry.periods, now);
       events.push({
@@ -93,10 +100,10 @@ export function transitionEvents(entry, before, after, language, now) {
   if (samePeriod(before, after)) {
     return events;
   }
-  if (before) {
+  if (before && fresh(before.end)) {
     events.push({ key: TRIGGERS.SHIFT_CHANGED, data: shiftData(before, 'end') });
   }
-  if (after) {
+  if (after && fresh(after.start)) {
     events.push({ key: TRIGGERS.SHIFT_CHANGED, data: shiftData(after, 'start') });
   }
   return events;
@@ -104,23 +111,14 @@ export function transitionEvents(entry, before, after, language, now) {
 
 /**
  * Watches the shared cycles and reports their transitions. The first look at
- * a cycle (start-up, a new or edited account) only records where it stands:
- * a restart never fires a scene, and `reset()` makes a change of settings
- * silent too.
+ * a cycle (start-up, a calendar newly shared) only records where it stands,
+ * and a change whose time is not the last few minutes fires nothing: a
+ * restart or a change of settings never fires a scene.
  */
 export class TransitionWatcher {
   constructor() {
     /** `<user>\n<slot>` → the running period, or null */
     this.seen = new Map();
-  }
-
-  /** Forget a cycle's position: the next look records it silently. */
-  reset(userSelector) {
-    for (const key of this.seen.keys()) {
-      if (key.startsWith(`${userSelector}\n`)) {
-        this.seen.delete(key);
-      }
-    }
   }
 
   /**

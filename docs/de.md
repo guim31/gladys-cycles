@@ -138,8 +138,7 @@ nächste Änderung und die Minuten bis dahin (-1, wenn es keine gibt).
 - **Der Kalender ist um eine Periode verschoben**: Das Startdatum ist der erste Tag des Modells,
   der Tag, an dem die Kinder kamen (sonst muss „Am Startdatum“ den anderen Elternteil nennen).
   Korrigiere es und speichere.
-- **Keine Szene startet**: Der Kalender muss geteilt sein, und der in der Szene eingegebene Name
-  muss der Kalendername sein (Groß- und Kleinschreibung und Akzente zählen nicht).
+- **Keine Szene startet**: Der Kalender muss geteilt sein, und der Filter eines Auslösers braucht den genauen Kalendernamen (die Szenen-Aktion ignoriert Groß- und Kleinschreibung und Akzente).
 - **Das Widget sagt, dass nichts geteilt ist**: Teile den Kalender unter „Meine Kalender“.
 
 ## Grenzen

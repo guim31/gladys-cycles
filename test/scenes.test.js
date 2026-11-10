@@ -169,3 +169,11 @@ test('the widget says when nothing is shared', async () => {
   });
   assert.match(ack.data.content.components[0].text, /Aucun calendrier de cycle partagé/);
 });
+
+test('a transition seen hours late (a reconnection) fires nothing', async () => {
+  const world = await sharedWorld();
+  world.clock.now = at('2026-10-16T21:00:00+02:00'); // three hours after the handover
+  assert.equal(await world.app.tick(), 0);
+  const ack = await world.fake.sceneAction('cycle_status', {});
+  assert.equal(ack.data.outputs.active, 0);
+});
