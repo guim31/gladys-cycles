@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-10
+
 ### Added
 
 - Shared custody calendars: one week in two, 2-2-3, 2-2-5-5, 3-4-4-3, 1st/3rd/5th
@@ -21,3 +23,6 @@ the notes of the version's GitHub Release.
 - Scene triggers "Children arrive or leave" and "Shift starts or ends", scene
   action "Get where a cycle stands", dashboard widget "Cycles".
 - English, French, German and Spanish.
+
+[Unreleased]: https://github.com/guim31/gladys-cycles/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-cycles/releases/tag/v1.0.0
